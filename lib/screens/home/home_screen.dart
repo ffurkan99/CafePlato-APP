@@ -14,7 +14,6 @@ import '../../models/campaign.dart';
 import '../../models/product.dart';
 import '../../providers/app_state_provider.dart';
 import '../../providers/cart_provider.dart';
-import '../../widgets/cafe_plato_arc.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/home_discovery_card.dart';
 import '../../widgets/pressable_scale.dart';
@@ -355,19 +354,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       child: Stack(
         children: [
-          // CafePlato Arc arka plan motifi
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: const CafePlatoArc(
-                color: AppColors.champagne,
-                opacity: 0.15,
-                alignment: Alignment.centerRight,
-                innerRadiusFactor: 0.55,
-                outerRadiusFactor: 0.75,
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -650,16 +636,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         child: Stack(
           children: [
-            // Dekoratif Arc motifi
-            Positioned.fill(
-              child: CafePlatoArc(
-                color: surface.arcColor,
-                opacity: 0.09,
-                alignment: Alignment.bottomRight,
-                innerRadiusFactor: 0.55,
-                outerRadiusFactor: 0.75,
-              ),
-            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

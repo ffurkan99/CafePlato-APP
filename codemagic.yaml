@@ -11,8 +11,8 @@ workflows:
     triggering:
       events:
         - push
-      branches:
-        - main
+      branch_patterns:
+        - pattern: main
     scripts:
       - name: Set up local.properties
         script: |
@@ -43,15 +43,15 @@ workflows:
     triggering:
       events:
         - push
-      branches:
-        - main
+      branch_patterns:
+        - pattern: main
     scripts:
       - name: Get dependencies
         script: |
           flutter packages pub get
       - name: Build iOS IPA (Unsigned / Simulator/development)
         script: |
-          # Build unsigned ios package (use build ipa with --no-codesign)
+          # Build unsigned ios package
           flutter build ipa --release --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa

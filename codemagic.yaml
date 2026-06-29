@@ -1,57 +1,153 @@
 # Codemagic CI/CD configuration for CafePlato Flutter App
+
 workflows:
   android-workflow:
     name: Android Build
     max_build_duration: 30
     instance_type: mac_mini_m1
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+
     triggering:
       events:
         - push
       branch_patterns:
         - pattern: main
+
     scripts:
       - name: Set up local.properties
         script: |
+          set -e
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          set -e
+          flutter pub get
+
       - name: Flutter analyze
         script: |
+          set -e
           flutter analyze
+
       - name: Flutter test
         script: |
+          set -e
           flutter test
+
       - name: Build Android APK
         script: |
+          set -e
           flutter build apk --release
+
     artifacts:
       - build/app/outputs/apk/release/*.apk
 
+
   ios-workflow:
-    name: iOS Build
+    name: iOS Unsigned Device Build
     max_build_duration: 30
     instance_type: mac_mini_m1
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+
     triggering:
       events:
         - push
       branch_patterns:
         - pattern: main
+
     scripts:
-      - name: Get dependencies
+      - name: Get Flutter packages
         script: |
-          flutter packages pub get
-      - name: Build iOS IPA (Unsigned / Simulator/development)
+          set -e
+          flutter pub get
+
+      - name: Install CocoaPods
         script: |
-          # Build unsigned ios package
-          flutter build ipa --release --no-codesign
+          set -e
+          cd ios
+          pod install
+          cd ..
+
+      - name: Build unsigned iOS app for device
+        script: |
+          set -e
+
+          # Simulator build değildir.
+          # Gerçek iPhone mimarisi için imzasız Runner.app oluşturur.
+          flutter build ios --release --no-codesign
+
+          echo "Unsigned iOS application generated:"
+          ls -lah "$CM_BUILD_DIR/build/ios/iphoneos"
+
+      - name: Package unsigned iOS artifacts
+        script: |
+          set -e
+
+          APP_PATH="$CM_BUILD_DIR/build/ios/iphoneos/Runner.app"
+          OUTPUT_DIR="$CM_BUILD_DIR/build/ios/artifacts"
+          PAYLOAD_DIR="$OUTPUT_DIR/Payload"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app was not found at:"
+            echo "$APP_PATH"
+            exit 1
+          fi
+
+          rm -rf "$OUTPUT_DIR"
+          mkdir -p "$PAYLOAD_DIR"
+
+          # Runner.app dosyasını Payload içine kopyala.
+          cp -R "$APP_PATH" "$PAYLOAD_DIR/Runner.app"
+
+          # 1. Dün kullandığın yönteme benzer:
+          # ZIP açılınca doğrudan Runner.app çıkar.
+          /usr/bin/ditto \
+            -c \
+            -k \
+            --sequesterRsrc \
+            --keepParent \
+            "$APP_PATH" \
+            "$OUTPUT_DIR/CafePlato-RunnerApp.zip"
+
+          # 2. ZIP açılınca Payload/Runner.app yapısı çıkar.
+          cd "$OUTPUT_DIR"
+
+          /usr/bin/ditto \
+            -c \
+            -k \
+            --sequesterRsrc \
+            --keepParent \
+            Payload \
+            CafePlato-Payload.zip
+
+          # 3. Aynı Payload paketinin .ipa uzantılı kopyası.
+          cp CafePlato-Payload.zip CafePlato-unsigned.ipa
+
+          echo ""
+          echo "Generated iOS artifacts:"
+          ls -lah "$OUTPUT_DIR"
+
+          echo ""
+          echo "Payload contents:"
+          find "$PAYLOAD_DIR" -maxdepth 2 -print
+
     artifacts:
-      - build/ios/ipa/*.ipa
+      # Runner.app içeren ZIP
+      - build/ios/artifacts/CafePlato-RunnerApp.zip
+
+      # Hazır Payload klasörü içeren ZIP
+      - build/ios/artifacts/CafePlato-Payload.zip
+
+      # Haricî araçla imzalanmak üzere hazırlanmış unsigned IPA
+      - build/ios/artifacts/CafePlato-unsigned.ipa
+
+      # Sorun çıkarsa incelemek için Xcode logları
+      - /tmp/xcodebuild_logs/*.log

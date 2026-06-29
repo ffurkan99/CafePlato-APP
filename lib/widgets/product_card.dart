@@ -1,39 +1,63 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../screens/product_detail/product_detail_screen.dart';
+import 'favorite_button.dart';
+import 'pressable_scale.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
 
   const ProductCard({super.key, required this.product});
+
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  Timer? _addedFeedbackTimer;
+  bool _justAdded = false;
+
+  Product get product => widget.product;
+
+  @override
+  void dispose() {
+    _addedFeedbackTimer?.cancel();
+    super.dispose();
+  }
 
   void _onAddPressed(BuildContext context) {
     if (product.availableSizes != null ||
         product.availableMilkOptions != null ||
         product.availableExtras != null) {
       // Go to detail screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProductDetailScreen(product: product),
-        ),
-      );
+      AppNavigator.push(context, ProductDetailScreen(product: product));
     } else {
       // Add to cart directly
       context.read<CartProvider>().addItem(
-            product: product,
-            calculatedUnitPrice: product.price,
-          );
+        product: product,
+        calculatedUnitPrice: product.price,
+      );
+      HapticFeedback.lightImpact();
+      _addedFeedbackTimer?.cancel();
+      setState(() => _justAdded = true);
+      _addedFeedbackTimer = Timer(const Duration(milliseconds: 650), () {
+        if (mounted) setState(() => _justAdded = false);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${product.name} sepete eklendi.'),
-          duration: const Duration(seconds: 2),
+          duration: const Duration(milliseconds: 1400),
         ),
       );
     }
@@ -47,31 +71,35 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          ),
-        );
+        AppNavigator.push(context, ProductDetailScreen(product: product));
       },
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.champagne, width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Stack(
                 children: [
                   Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.cardBackground,
+                          AppColors.champagneLight,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(15),
+                      ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -82,22 +110,14 @@ class ProductCard extends StatelessWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: GestureDetector(
+                    child: FavoriteButton(
+                      isFavorite: isFavorite,
+                      backgroundColor: AppColors.cardBackground.withAlpha(220),
                       onTap: () {
-                        context.read<FavoritesProvider>().toggleFavorite(product);
+                        context.read<FavoritesProvider>().toggleFavorite(
+                          product,
+                        );
                       },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackground.withAlpha(200),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -106,17 +126,20 @@ class ProductCard extends StatelessWidget {
             Expanded(
               flex: 5,
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 8.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       product.name,
-                      style: AppTextStyles.heading3.copyWith(fontSize: 14),
+                      style: AppTextStyles.productName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       product.description,
                       style: AppTextStyles.bodySmall,
@@ -126,6 +149,7 @@ class ProductCard extends StatelessWidget {
                     const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Flexible(
                           child: Text(
@@ -134,24 +158,48 @@ class ProductCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        GestureDetector(
+                        PressableScale(
+                          semanticLabel: '${product.name} sepete ekle',
                           onTap: () => _onAddPressed(context),
                           child: Container(
                             width: 28,
                             height: 28,
-                            decoration: BoxDecoration(
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
                               color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(8),
+                              shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 18),
+                            child: AnimatedSwitcher(
+                              duration: AppMotion.duration(
+                                context,
+                                AppMotion.fast,
+                              ),
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Icon(
+                                _justAdded
+                                    ? Icons.check_rounded
+                                    : Icons.add_rounded,
+                                key: ValueKey(_justAdded),
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
                           ),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../providers/cart_provider.dart';
@@ -8,6 +10,7 @@ import '../../providers/app_state_provider.dart';
 import '../../widgets/quantity_selector.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/empty_state.dart';
+import '../main_navigation.dart';
 import '../order_success/order_success_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -20,8 +23,24 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   bool _isLoading = false;
 
+  Widget _animatedPrice(BuildContext context, double value, TextStyle style) {
+    return AnimatedSwitcher(
+      duration: AppMotion.duration(context, AppMotion.fast),
+      switchInCurve: AppMotion.standard,
+      switchOutCurve: AppMotion.exit,
+      child: Text(
+        PriceFormatter.format(value),
+        key: ValueKey(value),
+        style: style,
+      ),
+    );
+  }
+
   void _completeOrder(BuildContext context, CartProvider cart) async {
-    final selectedBranchName = context.read<AppStateProvider>().selectedBranch.name;
+    final selectedBranchName = context
+        .read<AppStateProvider>()
+        .selectedBranch
+        .name;
     final total = cart.total;
 
     setState(() {
@@ -32,16 +51,11 @@ class _CartScreenState extends State<CartScreen> {
     await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!context.mounted) return;
-    
+
     // Navigate to success
-    Navigator.pushReplacement(
+    AppNavigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => OrderSuccessScreen(
-          branchName: selectedBranchName,
-          total: total,
-        ),
-      ),
+      OrderSuccessScreen(branchName: selectedBranchName, total: total),
     );
   }
 
@@ -61,10 +75,20 @@ class _CartScreenState extends State<CartScreen> {
             return EmptyState(
               message: 'Sepetiniz şu anda boş',
               icon: Icons.shopping_basket_outlined,
+              actionLabel: 'Menüyü İncele',
+              onAction: () {
+                AppNavigator.pushAndRemoveUntil(
+                  context,
+                  const MainNavigation(),
+                  (route) => false,
+                );
+              },
             );
           }
 
-          final selectedBranch = context.watch<AppStateProvider>().selectedBranch;
+          final selectedBranch = context
+              .watch<AppStateProvider>()
+              .selectedBranch;
 
           return Column(
             children: [
@@ -80,15 +104,33 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.storefront_rounded, color: AppColors.primary),
+                          const Icon(
+                            Icons.storefront_rounded,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Mağazadan Teslim Al', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-                                Text(selectedBranch.name, style: AppTextStyles.bodySmall),
-                                const Text('Hazırlanma süresi: 10-15 dakika', style: TextStyle(fontSize: 12, color: AppColors.primary)),
+                                const Text(
+                                  'Mağazadan Teslim Al',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                Text(
+                                  selectedBranch.name,
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                                const Text(
+                                  'Hazırlanma süresi: 10-15 dakika',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -116,7 +158,10 @@ class _CartScreenState extends State<CartScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               alignment: Alignment.center,
-                              child: Text(item.product.placeholderIcon, style: const TextStyle(fontSize: 32)),
+                              child: Text(
+                                item.product.placeholderIcon,
+                                style: const TextStyle(fontSize: 32),
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -124,12 +169,14 @@ class _CartScreenState extends State<CartScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
                                           item.product.name,
-                                          style: AppTextStyles.heading3.copyWith(fontSize: 16),
+                                          style: AppTextStyles.heading3
+                                              .copyWith(fontSize: 16),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -137,40 +184,59 @@ class _CartScreenState extends State<CartScreen> {
                                       IconButton(
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
-                                        icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary, size: 20),
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          color: AppColors.textSecondary,
+                                          size: 20,
+                                        ),
                                         onPressed: () {
                                           cart.removeItem(item.uniqueCartId);
                                         },
-                                      )
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
                                   if (item.selectedSize != null)
-                                    Text('Boyut: ${item.selectedSize!.name}', style: AppTextStyles.bodySmall),
+                                    Text(
+                                      'Boyut: ${item.selectedSize!.name}',
+                                      style: AppTextStyles.bodySmall,
+                                    ),
                                   if (item.selectedMilk != null)
-                                    Text('Süt: ${item.selectedMilk!.name}', style: AppTextStyles.bodySmall),
+                                    Text(
+                                      'Süt: ${item.selectedMilk!.name}',
+                                      style: AppTextStyles.bodySmall,
+                                    ),
                                   if (item.selectedExtras.isNotEmpty)
-                                    Text('Ekstra: ${item.selectedExtras.map((e) => e.name).join(', ')}', style: AppTextStyles.bodySmall),
+                                    Text(
+                                      'Ekstra: ${item.selectedExtras.map((e) => e.name).join(', ')}',
+                                      style: AppTextStyles.bodySmall,
+                                    ),
                                   const SizedBox(height: 12),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        PriceFormatter.format(item.totalPrice),
-                                        style: AppTextStyles.price,
+                                      _animatedPrice(
+                                        context,
+                                        item.totalPrice,
+                                        AppTextStyles.price,
                                       ),
                                       QuantitySelector(
                                         quantity: item.quantity,
                                         onChanged: (newVal) {
                                           if (newVal > item.quantity) {
-                                            cart.incrementQuantity(item.uniqueCartId);
+                                            cart.incrementQuantity(
+                                              item.uniqueCartId,
+                                            );
                                           } else {
-                                            cart.decrementQuantity(item.uniqueCartId);
+                                            cart.decrementQuantity(
+                                              item.uniqueCartId,
+                                            );
                                           }
                                         },
                                       ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -190,7 +256,7 @@ class _CartScreenState extends State<CartScreen> {
                       color: Colors.black.withAlpha(10),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
-                    )
+                    ),
                   ],
                 ),
                 child: SafeArea(
@@ -200,24 +266,43 @@ class _CartScreenState extends State<CartScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Ara Toplam', style: AppTextStyles.bodyMedium),
-                          Text(PriceFormatter.format(cart.subtotal), style: AppTextStyles.bodyLarge),
+                          const Text(
+                            'Ara Toplam',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          _animatedPrice(
+                            context,
+                            cart.subtotal,
+                            AppTextStyles.bodyLarge,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Hizmet Bedeli', style: AppTextStyles.bodyMedium),
-                          Text(PriceFormatter.format(0), style: AppTextStyles.bodyLarge),
+                          const Text(
+                            'Hizmet Bedeli',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          Text(
+                            PriceFormatter.format(0),
+                            style: AppTextStyles.bodyLarge,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('İndirim', style: AppTextStyles.bodyMedium),
-                          Text(PriceFormatter.format(0), style: AppTextStyles.bodyLarge),
+                          const Text(
+                            'İndirim',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          Text(
+                            PriceFormatter.format(0),
+                            style: AppTextStyles.bodyLarge,
+                          ),
                         ],
                       ),
                       const Padding(
@@ -227,10 +312,16 @@ class _CartScreenState extends State<CartScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Genel Toplam', style: AppTextStyles.heading3),
-                          Text(
-                            PriceFormatter.format(cart.total),
-                            style: AppTextStyles.heading2.copyWith(color: AppColors.primary),
+                          const Text(
+                            'Genel Toplam',
+                            style: AppTextStyles.heading3,
+                          ),
+                          _animatedPrice(
+                            context,
+                            cart.total,
+                            AppTextStyles.heading2.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
                       ),
@@ -243,7 +334,7 @@ class _CartScreenState extends State<CartScreen> {
                     ],
                   ),
                 ),
-              )
+              ),
             ],
           );
         },

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/mock_data.dart';
 import '../../models/product.dart';
@@ -10,8 +12,8 @@ import '../../widgets/campaign_card.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/section_header.dart';
-import '../../core/utils/price_formatter.dart';
-import '../../widgets/cart_summary_bar.dart';
+import '../../widgets/pressable_scale.dart';
+
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 
@@ -22,14 +24,68 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   String _selectedCategory = MockData.categories.first;
-  
+  late final AnimationController _introController;
+
+  @override
+  void initState() {
+    super.initState();
+    _introController = AnimationController(
+      vsync: this,
+      duration: AppMotion.intro,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      if (AppMotion.reduceMotion(context)) {
+        _introController.value = 1;
+      } else {
+        _introController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _introController.dispose();
+    super.dispose();
+  }
+
+  Widget _introItem(int index, Widget child) {
+    final start = index * 0.09;
+    final end = start + 0.55;
+
+    return AnimatedBuilder(
+      animation: _introController,
+      child: child,
+      builder: (context, child) {
+        final progress = Interval(
+          start,
+          end,
+          curve: AppMotion.entrance,
+        ).transform(_introController.value);
+
+        return Opacity(
+          opacity: progress,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - progress)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   List<Product> get _filteredProducts {
     if (_selectedCategory == 'Tümü') {
       return MockData.products;
     }
-    return MockData.products.where((p) => p.category == _selectedCategory).toList();
+    return MockData.products
+        .where((p) => p.category == _selectedCategory)
+        .toList();
   }
 
   void _showNotificationSnackBar(BuildContext context) {
@@ -50,8 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
       milk: product.availableMilkOptions?[1], // Laktozsuz süt
       extras: [],
       quantity: 1,
-      calculatedUnitPrice: product.price + (product.availableSizes?[1].priceDelta ?? 0) + (product.availableMilkOptions?[1].priceDelta ?? 0),
+      calculatedUnitPrice:
+          product.price +
+          (product.availableSizes?[1].priceDelta ?? 0) +
+          (product.availableMilkOptions?[1].priceDelta ?? 0),
     );
+    HapticFeedback.lightImpact();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -63,123 +123,162 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            CustomScrollView(
-              slivers: [
+    return SafeArea(
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
           SliverToBoxAdapter(
-            child: AppHeader(
-              title: 'Günaydın, Furkan',
-              subtitle: 'Bugün hangi kahveyi tercih edersin?',
-              onNotificationTap: () => _showNotificationSnackBar(context),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 8),
-          ),
-          const SliverToBoxAdapter(
-            child: BranchSelector(),
-          ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 24),
-          ),
-          const SliverToBoxAdapter(
-            child: LoyaltyCard(),
-          ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 16),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 200,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                scrollDirection: Axis.horizontal,
-                itemCount: MockData.campaigns.length,
-                itemBuilder: (context, index) {
-                  return CampaignCard(campaign: MockData.campaigns[index]);
-                },
+            child: _introItem(
+              0,
+              AppHeader(
+                title: 'Günaydın, Furkan',
+                subtitle: 'Bugün hangi kahveyi tercih edersin?',
+                onNotificationTap: () => _showNotificationSnackBar(context),
               ),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Tekrar Sipariş Ver'),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          SliverToBoxAdapter(child: _introItem(1, const BranchSelector())),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          SliverToBoxAdapter(child: _introItem(2, const LoyaltyCard())),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(MockData.lastOrder.placeholderIcon, style: const TextStyle(fontSize: 24)),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(MockData.lastOrder.name, style: AppTextStyles.heading3.copyWith(fontSize: 16)),
-                          Text('Orta boy • Laktozsuz süt', style: AppTextStyles.bodySmall),
-                          const SizedBox(height: 4),
-                          Text(PriceFormatter.format(MockData.lastOrder.price), style: AppTextStyles.price.copyWith(fontSize: 14)),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _showReorderSnackBar(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
-                      child: const Text('Tekrar Ekle'),
-                    ),
-                  ],
+            child: _introItem(
+              3,
+              SizedBox(
+                height: 160,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cardWidth = constraints.maxWidth * 0.8;
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: MockData.campaigns.length,
+                      itemBuilder: (context, index) {
+                        return CampaignCard(
+                          campaign: MockData.campaigns[index],
+                          width: cardWidth,
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 24),
+          SliverToBoxAdapter(
+            child: _introItem(
+              4,
+              const SectionHeader(title: 'Tekrar Sipariş Ver'),
+            ),
           ),
           SliverToBoxAdapter(
-            child: SizedBox(
-              height: 40,
-              child: ListView.builder(
+            child: _introItem(
+              4,
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                scrollDirection: Axis.horizontal,
-                itemCount: MockData.categories.length,
-                itemBuilder: (context, index) {
-                  final category = MockData.categories[index];
-                  return CategoryChip(
-                    label: category,
-                    isSelected: _selectedCategory == category,
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
-                    },
-                  );
-                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: AppColors.champagne),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: AppColors.background,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          MockData.lastOrder.placeholderIcon,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              MockData.lastOrder.name,
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              'Orta boy',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PressableScale(
+                        semanticLabel: 'Tekrar sepete ekle',
+                        onTap: () => _showReorderSnackBar(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: const Text(
+                            'Ekle',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Popüler Ürünler'),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          SliverToBoxAdapter(
+            child: _introItem(
+              5,
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: MockData.categories.length,
+                  itemBuilder: (context, index) {
+                    final category = MockData.categories[index];
+                    return CategoryChip(
+                      label: category,
+                      isSelected: _selectedCategory == category,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _introItem(5, const SectionHeader(title: 'Popüler Ürünler')),
           ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -190,28 +289,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisSpacing: 16,
                 childAspectRatio: 0.60,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return ProductCard(product: _filteredProducts[index]);
-                },
-                childCount: _filteredProducts.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final product = _filteredProducts[index];
+                return _introItem(
+                  5,
+                  AnimatedSwitcher(
+                    duration: AppMotion.duration(context, AppMotion.fast),
+                    child: ProductCard(
+                      key: ValueKey(product.id),
+                      product: product,
+                    ),
+                  ),
+                );
+              }, childCount: _filteredProducts.length),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80), // To make room for CartSummaryBar
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
-      Positioned(
-        left: 0,
-        right: 0,
-        bottom: 0,
-        child: const CartSummaryBar(),
-      ),
-    ],
-  ),
-),
     );
   }
 }

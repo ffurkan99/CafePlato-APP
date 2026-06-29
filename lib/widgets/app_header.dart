@@ -45,19 +45,20 @@ class AppHeader extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.champagneLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.champagne),
                 ),
                 alignment: Alignment.center,
                 child: const Text(
                   'F',
                   style: TextStyle(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
               ),

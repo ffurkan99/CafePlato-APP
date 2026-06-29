@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -73,17 +74,26 @@ class NotificationSettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.heading3.copyWith(fontSize: 16)),
+                Text(
+                  title,
+                  style: AppTextStyles.heading3.copyWith(fontSize: 16),
+                ),
                 const SizedBox(height: 4),
                 Text(description, style: AppTextStyles.bodySmall),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          Switch(
+          Switch.adaptive(
             value: value,
-            onChanged: onChanged,
+            onChanged: (newValue) {
+              if (newValue != value) {
+                HapticFeedback.selectionClick();
+                onChanged(newValue);
+              }
+            },
             activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
           ),
         ],
       ),

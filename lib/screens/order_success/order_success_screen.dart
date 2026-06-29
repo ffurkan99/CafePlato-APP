@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../providers/cart_provider.dart';
+import '../../widgets/primary_button.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
   final String branchName;
@@ -52,33 +54,53 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(),
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withAlpha(20),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_circle_rounded,
-                    color: AppColors.success,
-                    size: 80,
-                  ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.96, end: 1),
+                  duration: AppMotion.duration(context, AppMotion.slow),
+                  curve: AppMotion.emphasis,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.successGlow,
+                              blurRadius: 40 * value,
+                              spreadRadius: 10 * value,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.success,
+                          size: 80,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Siparişiniz Alındı',
-                  style: AppTextStyles.heading1,
-                ),
+                const Text('Siparişiniz Alındı', style: AppTextStyles.heading1),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Text('Sipariş No: CP-1048', style: AppTextStyles.heading3),
+                  child: const Text(
+                    'Sipariş No: CP-1048',
+                    style: AppTextStyles.heading3,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 Container(
@@ -103,27 +125,23 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Toplam Tutar', style: AppTextStyles.bodyLarge),
-                          Text(PriceFormatter.format(widget.total), style: AppTextStyles.heading3),
+                          const Text(
+                            'Toplam Tutar',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                          Text(
+                            PriceFormatter.format(widget.total),
+                            style: AppTextStyles.heading3,
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
                 const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => _returnHome(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text('Ana Sayfaya Dön', style: AppTextStyles.button),
-                  ),
+                PrimaryButton(
+                  text: 'Ana Sayfaya Dön',
+                  onPressed: () => _returnHome(context),
                 ),
               ],
             ),
@@ -138,7 +156,10 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: AppTextStyles.bodyMedium),
-        Text(value, style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }

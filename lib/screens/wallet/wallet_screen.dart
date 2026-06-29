@@ -5,6 +5,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../data/mock_data.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/section_header.dart';
+import '../../widgets/pressable_scale.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
@@ -24,35 +25,38 @@ class WalletScreen extends StatelessWidget {
 
     return SafeArea(
       child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Cüzdanım'),
-          ),
+          const SliverToBoxAdapter(child: SectionHeader(title: 'Cüzdanım')),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      Color(0xFF8B1E24), // Tonal darker red
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    )
+                      color: AppColors.primaryGlow,
+                      blurRadius: 24,
+                      offset: Offset(0, 8),
+                    ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       '1.240',
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
+                      style: AppTextStyles.displayValue.copyWith(
                         color: Colors.white,
-                        letterSpacing: -1,
                       ),
                     ),
                     const Text(
@@ -65,40 +69,71 @@ class WalletScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star_rounded, color: Color(0xFFFFD700), size: 20),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Color(0xFFFFD700),
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           const Text(
                             'Gold Üye',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(width: 16),
-                          const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
+                          const Icon(
+                            Icons.location_on_rounded,
+                            color: Colors.white70,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
-                          Text(
-                            selectedBranch.name,
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          Expanded(
+                            child: Text(
+                              selectedBranch.name,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.qr_code_2_rounded, size: 120, color: AppColors.textPrimary),
+                          Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 96,
+                            color: AppColors.textPrimary,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             'Kasada QR kodunuzu okutun',
@@ -116,78 +151,132 @@ class WalletScreen extends StatelessWidget {
             child: SectionHeader(title: 'Aktif Kuponlar'),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final coupon = MockData.coupons[index];
-                return Padding(
-                  padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final coupon = MockData.coupons[index];
+              return Padding(
+                padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.champagne),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.card_giftcard_rounded,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          coupon.title,
+                          style: AppTextStyles.heading3.copyWith(fontSize: 16),
+                        ),
+                      ),
+                      PressableScale(
+                        semanticLabel: '${coupon.title} kuponunu kullan',
+                        onTap: () => _showCouponSnackBar(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.champagneLight,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            'Kullan',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }, childCount: MockData.coupons.length),
+          ),
+          const SliverToBoxAdapter(child: SectionHeader(title: 'Son İşlemler')),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final transaction = MockData.recentTransactions[index];
+              final isPositive = transaction.pointDelta > 0;
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(12),
+                            color: isPositive
+                                ? AppColors.success.withValues(alpha: 0.1)
+                                : AppColors.primaryLight,
+                            shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.card_giftcard_rounded, color: AppColors.primary),
+                          child: Icon(
+                            isPositive
+                                ? Icons.add_rounded
+                                : Icons.remove_rounded,
+                            color: isPositive
+                                ? AppColors.success
+                                : AppColors.primary,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Text(coupon.title, style: AppTextStyles.heading3.copyWith(fontSize: 16)),
+                          child: Text(
+                            transaction.description,
+                            style: AppTextStyles.bodyLarge,
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () => _showCouponSnackBar(context),
-                          child: const Text('Kullan'),
-                        )
+                        Text(
+                          '${isPositive ? '+' : ''}${transaction.pointDelta}',
+                          style: TextStyle(
+                            color: isPositive
+                                ? AppColors.success
+                                : AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                );
-              },
-              childCount: MockData.coupons.length,
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Son İşlemler'),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final transaction = MockData.recentTransactions[index];
-                final isPositive = transaction.pointDelta > 0;
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-                  leading: CircleAvatar(
-                    backgroundColor: isPositive ? AppColors.success.withValues(alpha: 0.1) : AppColors.primaryLight,
-                    child: Icon(
-                      isPositive ? Icons.add_rounded : Icons.remove_rounded,
-                      color: isPositive ? AppColors.success : AppColors.primary,
+                  if (index < MockData.recentTransactions.length - 1)
+                    const Divider(
+                      height: 1,
+                      indent: 64,
+                      endIndent: 24,
+                      color: AppColors.border,
                     ),
-                  ),
-                  title: Text(transaction.description, style: AppTextStyles.bodyLarge),
-                  trailing: Text(
-                    '${isPositive ? '+' : ''}${transaction.pointDelta}',
-                    style: TextStyle(
-                      color: isPositive ? AppColors.success : AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                );
-              },
-              childCount: MockData.recentTransactions.length,
-            ),
+                ],
+              );
+            }, childCount: MockData.recentTransactions.length),
           ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 32),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );

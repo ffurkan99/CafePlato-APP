@@ -8,13 +8,15 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTextStyles.fontFamily,
+      textTheme: AppTextStyles.textTheme,
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primary,
         surface: AppColors.cardBackground,
-        error: AppColors.primary, 
+        error: AppColors.primary,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
@@ -31,8 +33,8 @@ class AppTheme {
         elevation: 8,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        selectedLabelStyle: AppTextStyles.bottomNavigation,
+        unselectedLabelStyle: AppTextStyles.bottomNavigation,
       ),
       cardTheme: const CardThemeData(
         color: AppColors.cardBackground,
@@ -66,10 +68,7 @@ class AppTheme {
         thickness: 1,
         space: 24,
       ),
-      iconTheme: const IconThemeData(
-        color: AppColors.textPrimary,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
     );
   }
 }

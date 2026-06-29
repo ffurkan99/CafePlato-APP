@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/price_formatter.dart';
 import '../../../models/product.dart';
@@ -11,6 +13,8 @@ import '../../../providers/cart_provider.dart';
 import '../../../providers/favorites_provider.dart';
 import '../../../widgets/quantity_selector.dart';
 import '../../../widgets/primary_button.dart';
+import '../../../widgets/favorite_button.dart';
+import '../../../widgets/pressable_scale.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -52,13 +56,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _onAddToCart() {
     context.read<CartProvider>().addItem(
-          product: widget.product,
-          size: _selectedSize,
-          milk: _selectedMilk,
-          extras: _selectedExtras,
-          quantity: _quantity,
-          calculatedUnitPrice: _calculatedUnitPrice,
-        );
+      product: widget.product,
+      size: _selectedSize,
+      milk: _selectedMilk,
+      extras: _selectedExtras,
+      quantity: _quantity,
+      calculatedUnitPrice: _calculatedUnitPrice,
+    );
+    HapticFeedback.lightImpact();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -66,7 +71,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         action: SnackBarAction(
           label: 'Sepete Git',
           onPressed: () {
-            // Need to close detail screen and switch tab to Cart. 
+            // Need to close detail screen and switch tab to Cart.
             // We can just close for now, user can use tab. Or we could pop to root and set tab.
             Navigator.pop(context);
           },
@@ -93,14 +98,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: isFavorite ? AppColors.primary : AppColors.textPrimary,
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FavoriteButton(
+              isFavorite: isFavorite,
+              iconSize: 24,
+              padding: 12,
+              onTap: () {
+                context.read<FavoritesProvider>().toggleFavorite(
+                  widget.product,
+                );
+              },
             ),
-            onPressed: () {
-              context.read<FavoritesProvider>().toggleFavorite(widget.product);
-            },
           ),
         ],
       ),
@@ -116,7 +125,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 240,
                     decoration: const BoxDecoration(
                       color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(32),
+                      ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -137,62 +148,119 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(widget.product.name, style: AppTextStyles.heading1),
+                                  Text(
+                                    widget.product.name,
+                                    style: AppTextStyles.heading1,
+                                  ),
                                   const SizedBox(height: 8),
-                                  Text(widget.product.description, style: AppTextStyles.bodyMedium),
+                                  Text(
+                                    widget.product.description,
+                                    style: AppTextStyles.bodyMedium,
+                                  ),
                                 ],
                               ),
                             ),
                             Text(
                               PriceFormatter.format(widget.product.price),
-                              style: AppTextStyles.heading2.copyWith(color: AppColors.primary),
+                              style: AppTextStyles.heading2.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 32),
-                        if (widget.product.availableSizes?.isNotEmpty == true) ...[
+                        if (widget.product.availableSizes?.isNotEmpty ==
+                            true) ...[
                           const Text('Boyut', style: AppTextStyles.heading3),
                           const SizedBox(height: 12),
                           Row(
-                            children: widget.product.availableSizes!.map((size) {
+                            children: widget.product.availableSizes!.map((
+                              size,
+                            ) {
                               final isSelected = _selectedSize == size;
                               return Expanded(
-                                child: GestureDetector(
+                                child: PressableScale(
+                                  semanticLabel: '${size.name} boy',
+                                  selected: isSelected,
                                   onTap: () {
+                                    if (isSelected) return;
+                                    HapticFeedback.selectionClick();
                                     setState(() {
                                       _selectedSize = size;
                                     });
                                   },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.primary : AppColors.background,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: isSelected ? AppColors.primary : AppColors.border,
-                                      ),
+                                  child: AnimatedScale(
+                                    scale: isSelected ? 1 : 0.98,
+                                    duration: AppMotion.duration(
+                                      context,
+                                      AppMotion.normal,
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          size.name,
-                                          style: TextStyle(
-                                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                    curve: AppMotion.standard,
+                                    child: AnimatedContainer(
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      duration: AppMotion.duration(
+                                        context,
+                                        AppMotion.normal,
+                                      ),
+                                      curve: AppMotion.standard,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.background,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : AppColors.border,
                                         ),
-                                        if (size.priceDelta > 0) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '+${PriceFormatter.format(size.priceDelta)}',
-                                            style: TextStyle(
-                                              color: isSelected ? Colors.white70 : AppColors.textSecondary,
-                                              fontSize: 12,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          AnimatedDefaultTextStyle(
+                                            duration: AppMotion.duration(
+                                              context,
+                                              AppMotion.normal,
                                             ),
+                                            curve: AppMotion.standard,
+                                            style: TextStyle(
+                                              fontFamily:
+                                                  AppTextStyles.fontFamily,
+                                              fontSize: 14,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : AppColors.textPrimary,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
+                                            ),
+                                            child: Text(size.name),
                                           ),
-                                        ]
-                                      ],
+                                          if (size.priceDelta > 0) ...[
+                                            const SizedBox(height: 4),
+                                            AnimatedDefaultTextStyle(
+                                              duration: AppMotion.duration(
+                                                context,
+                                                AppMotion.normal,
+                                              ),
+                                              curve: AppMotion.standard,
+                                              style: TextStyle(
+                                                fontFamily:
+                                                    AppTextStyles.fontFamily,
+                                                color: isSelected
+                                                    ? Colors.white70
+                                                    : AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                              child: Text(
+                                                '+${PriceFormatter.format(size.priceDelta)}',
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -201,63 +269,160 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 24),
                         ],
-                        if (widget.product.availableMilkOptions?.isNotEmpty == true) ...[
-                          const Text('Süt Seçimi', style: AppTextStyles.heading3),
+                        if (widget.product.availableMilkOptions?.isNotEmpty ==
+                            true) ...[
+                          const Text(
+                            'Süt Seçimi',
+                            style: AppTextStyles.heading3,
+                          ),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: widget.product.availableMilkOptions!.map((milk) {
+                            children: widget.product.availableMilkOptions!.map((
+                              milk,
+                            ) {
                               final isSelected = _selectedMilk == milk;
-                              return FilterChip(
-                                label: Text(milk.name),
+                              return PressableScale(
+                                semanticLabel: '${milk.name} süt seçeneği',
                                 selected: isSelected,
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(() {
-                                      _selectedMilk = milk;
-                                    });
-                                  }
+                                onTap: () {
+                                  if (isSelected) return;
+                                  HapticFeedback.selectionClick();
+                                  setState(() {
+                                    _selectedMilk = milk;
+                                  });
                                 },
-                                backgroundColor: AppColors.background,
-                                selectedColor: AppColors.primaryLight,
-                                checkmarkColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  side: BorderSide(
-                                    color: isSelected ? AppColors.primary : AppColors.border,
+                                child: AnimatedContainer(
+                                  duration: AppMotion.duration(
+                                    context,
+                                    AppMotion.normal,
                                   ),
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                  curve: AppMotion.standard,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primaryLight
+                                        : AppColors.background,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                    ),
+                                  ),
+                                  child: AnimatedDefaultTextStyle(
+                                    duration: AppMotion.duration(
+                                      context,
+                                      AppMotion.normal,
+                                    ),
+                                    curve: AppMotion.standard,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.textPrimary,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                                    child: Text(milk.name),
+                                  ),
                                 ),
                               );
                             }).toList(),
                           ),
                           const SizedBox(height: 24),
                         ],
-                        if (widget.product.availableExtras?.isNotEmpty == true) ...[
-                          const Text('Ekstralar', style: AppTextStyles.heading3),
+                        if (widget.product.availableExtras?.isNotEmpty ==
+                            true) ...[
+                          const Text(
+                            'Ekstralar',
+                            style: AppTextStyles.heading3,
+                          ),
                           const SizedBox(height: 12),
                           ...widget.product.availableExtras!.map((extra) {
                             final isSelected = _selectedExtras.contains(extra);
-                            return CheckboxListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(extra.name, style: AppTextStyles.bodyLarge),
-                              subtitle: Text('+${PriceFormatter.format(extra.priceDelta)}', style: AppTextStyles.bodySmall),
-                              value: isSelected,
-                              activeColor: AppColors.primary,
-                              controlAffinity: ListTileControlAffinity.leading,
-                              onChanged: (checked) {
+                            return PressableScale(
+                              pressedScale: 0.99,
+                              semanticLabel: '${extra.name} ekstra seçeneği',
+                              selected: isSelected,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
                                 setState(() {
-                                  if (checked == true) {
-                                    _selectedExtras.add(extra);
-                                  } else {
+                                  if (isSelected) {
                                     _selectedExtras.remove(extra);
+                                  } else {
+                                    _selectedExtras.add(extra);
                                   }
                                 });
                               },
+                              child: SizedBox(
+                                height: 52,
+                                child: Row(
+                                  children: [
+                                    AnimatedContainer(
+                                      width: 24,
+                                      height: 24,
+                                      duration: AppMotion.duration(
+                                        context,
+                                        AppMotion.normal,
+                                      ),
+                                      curve: AppMotion.standard,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(7),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : AppColors.border,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: AnimatedSwitcher(
+                                        duration: AppMotion.duration(
+                                          context,
+                                          AppMotion.fast,
+                                        ),
+                                        child: isSelected
+                                            ? const Icon(
+                                                Icons.check_rounded,
+                                                key: ValueKey(true),
+                                                color: Colors.white,
+                                                size: 17,
+                                              )
+                                            : const SizedBox(
+                                                key: ValueKey(false),
+                                              ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            extra.name,
+                                            style: AppTextStyles.bodyLarge,
+                                          ),
+                                          Text(
+                                            '+${PriceFormatter.format(extra.priceDelta)}',
+                                            style: AppTextStyles.bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             );
                           }),
                         ],
@@ -277,7 +442,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   color: Colors.black.withAlpha(10),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
-                )
+                ),
               ],
             ),
             child: SafeArea(
@@ -294,7 +459,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: PrimaryButton(
-                      text: 'Sepete Ekle • ${PriceFormatter.format(_totalPrice)}',
+                      text:
+                          'Sepete Ekle • ${PriceFormatter.format(_totalPrice)}',
                       onPressed: _onAddToCart,
                     ),
                   ),

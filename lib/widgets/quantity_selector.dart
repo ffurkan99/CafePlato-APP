@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import 'animated_count.dart';
+import 'pressable_scale.dart';
 
 class QuantitySelector extends StatelessWidget {
   final int quantity;
@@ -35,9 +37,8 @@ class QuantitySelector extends StatelessWidget {
           ),
           SizedBox(
             width: 40,
-            child: Text(
-              quantity.toString(),
-              textAlign: TextAlign.center,
+            child: AnimatedCount(
+              value: quantity,
               style: AppTextStyles.heading3,
             ),
           ),
@@ -58,8 +59,9 @@ class QuantitySelector extends StatelessWidget {
     required VoidCallback onTap,
     required bool isEnabled,
   }) {
-    return GestureDetector(
+    return PressableScale(
       onTap: isEnabled ? onTap : null,
+      semanticLabel: icon == Icons.add_rounded ? 'Adedi artır' : 'Adedi azalt',
       child: Container(
         width: 32,
         height: 32,
@@ -72,7 +74,7 @@ class QuantitySelector extends StatelessWidget {
                     color: Colors.black.withAlpha(10),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),

@@ -19,4 +19,14 @@ class AppColors {
 
   static const Color grey = Color(0xFF9E9E9E);
   static const Color darkGrey = Color(0xFF424242);
+  
+  // Premium Vurgular
+  static const Color champagne = Color(0xFFD6C2A6); // Şampanya / sıcak bej
+  static const Color champagneLight = Color(0xFFF9F6F0); // Çok hafif şampanya yüzey
+
+  // Gölgeler ve glow (parlama) efektleri
+  static const Color primaryGlow = Color(0x26B3262E); // %15 opacity primary
+  static const Color primaryBorder = Color(0x0DB3262E); // %5 opacity primary
+  static const Color shadowTint = Color(0x0D5A3B3B); // %5 opacity sıcak gölge
+  static const Color successGlow = Color(0x262F7D52); // %15 opacity success
 }

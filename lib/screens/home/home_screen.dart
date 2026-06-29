@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/navigation/app_modal.dart';
+import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -13,10 +14,13 @@ import '../../data/mock_data.dart';
 import '../../models/campaign.dart';
 import '../../models/product.dart';
 import '../../providers/app_state_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../widgets/app_feedback.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/home_discovery_card.dart';
 import '../../widgets/pressable_scale.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,8 +72,11 @@ class _HomeScreenState extends State<HomeScreen>
       animation: _introController,
       child: child,
       builder: (context, child) {
-        final progress = Interval(start, end, curve: AppMotion.entrance)
-            .transform(_introController.value);
+        final progress = Interval(
+          start,
+          end,
+          curve: AppMotion.entrance,
+        ).transform(_introController.value);
         return Opacity(
           opacity: progress,
           child: Transform.translate(
@@ -92,12 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _showNotificationSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Henüz yeni bildiriminiz bulunmuyor.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    AppFeedback.show(context, 'Henüz yeni bildiriminiz bulunmuyor.');
   }
 
   void _onReorder() {
@@ -108,7 +110,8 @@ class _HomeScreenState extends State<HomeScreen>
       milk: product.availableMilkOptions?[1],
       extras: [],
       quantity: 1,
-      calculatedUnitPrice: product.price +
+      calculatedUnitPrice:
+          product.price +
           (product.availableSizes?[1].priceDelta ?? 0) +
           (product.availableMilkOptions?[1].priceDelta ?? 0),
     );
@@ -118,12 +121,7 @@ class _HomeScreenState extends State<HomeScreen>
     _reorderFeedbackTimer = Timer(const Duration(milliseconds: 1200), () {
       if (mounted) setState(() => _reorderJustAdded = false);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tekrar eklendi.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    AppFeedback.show(context, 'Tekrar eklendi.', type: AppFeedbackType.success);
   }
 
   void _showBranchSheet() {
@@ -190,9 +188,7 @@ class _HomeScreenState extends State<HomeScreen>
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ─── 1. Editorial Karşılama Başlığı ─────────────────────────
-          SliverToBoxAdapter(
-            child: _introItem(0, _buildEditorialHeader()),
-          ),
+          SliverToBoxAdapter(child: _introItem(0, _buildEditorialHeader())),
 
           // ─── 2. CafePlato Club Hero ──────────────────────────────────
           SliverToBoxAdapter(
@@ -209,37 +205,25 @@ class _HomeScreenState extends State<HomeScreen>
 
           // ─── 3. Editorial Kampanya Carousel ─────────────────────────
           SliverToBoxAdapter(
-            child: _introItem(
-              2,
-              _buildCampaignCarousel(screenWidth),
-            ),
+            child: _introItem(2, _buildCampaignCarousel(screenWidth)),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
           // ─── 4. Hızlı Tekrar Sipariş Dock ───────────────────────────
-          SliverToBoxAdapter(
-            child: _introItem(3, _buildReorderDock()),
-          ),
+          SliverToBoxAdapter(child: _introItem(3, _buildReorderDock())),
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
           // ─── 5. Minimal Kategori Kontrolü ───────────────────────────
-          SliverToBoxAdapter(
-            child: _introItem(4, _buildCategoryLabel()),
-          ),
-          SliverToBoxAdapter(
-            child: _introItem(4, _buildCategoryRow()),
-          ),
+          SliverToBoxAdapter(child: _introItem(4, _buildCategoryLabel())),
+          SliverToBoxAdapter(child: _introItem(4, _buildCategoryRow())),
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // ─── 6. Yatay Discovery Ürün Rail'i ─────────────────────────
           SliverToBoxAdapter(
-            child: _introItem(
-              5,
-              _buildDiscoveryRail(screenWidth),
-            ),
+            child: _introItem(5, _buildDiscoveryRail(screenWidth)),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -252,6 +236,12 @@ class _HomeScreenState extends State<HomeScreen>
   // 1. EDITORIAL KARŞILAMA BAŞLIĞI
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildEditorialHeader() {
+    final user = context.watch<AuthProvider>().currentUser;
+    final firstName = user?.firstName.isNotEmpty == true
+        ? user!.firstName
+        : 'Misafir';
+    final initial = firstName.characters.first.toUpperCase();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
@@ -274,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Günaydın, Furkan',
+                  'Günaydın, $firstName',
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 26,
@@ -299,6 +289,7 @@ class _HomeScreenState extends State<HomeScreen>
               PressableScale(
                 semanticLabel: 'Bildirimler',
                 onTap: _showNotificationSnackBar,
+                borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 38,
                   height: 38,
@@ -316,22 +307,27 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.champagneLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.champagne, width: 0.8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'F',
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+              PressableScale(
+                semanticLabel: 'Profili aç',
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => AppNavigator.push(context, const ProfileScreen()),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.champagneLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.champagne, width: 0.8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -362,17 +358,23 @@ class _HomeScreenState extends State<HomeScreen>
                 // Üst satır: Club label + Gold badge
                 Row(
                   children: [
-                    Text(
-                      'CAFEPLATO CLUB',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                        letterSpacing: 1.2,
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'CAFEPLATO CLUB',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 9,
@@ -413,35 +415,39 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(height: 14),
 
                 // Orta: Puan + CafePuan
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '1.240',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -1.5,
-                        height: 1.0,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Text(
-                        'CafePuan',
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '1.240',
                         style: TextStyle(
                           fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -1.5,
+                          height: 1.0,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          'CafePuan',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -467,6 +473,7 @@ class _HomeScreenState extends State<HomeScreen>
                 PressableScale(
                   semanticLabel: 'Şube seç',
                   onTap: _showBranchSheet,
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -624,90 +631,94 @@ class _HomeScreenState extends State<HomeScreen>
     final idx = campaign.surfaceVariant.clamp(0, surfaces.length - 1);
     final surface = surfaces[idx];
 
-    return PressableScale(
-      onTap: () => _showCampaignDetail(campaign),
-      child: Container(
-        width: width,
-        margin: const EdgeInsets.only(right: 14),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: surface.bg,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Üst label
-                if (campaign.label != null)
-                  Text(
-                    campaign.label!,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: surface.accentColor.withAlpha(180),
-                      letterSpacing: 0.9,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (campaign.label != null) const SizedBox(height: 4),
-                // Büyük tipografik vurgu
-                if (campaign.accentValue != null)
-                  Text(
-                    campaign.accentValue!,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 38,
-                      fontWeight: FontWeight.w800,
-                      color: surface.accentColor,
-                      height: 1.0,
-                      letterSpacing: -1.2,
-                    ),
-                  ),
-                if (campaign.accentValue != null) const SizedBox(height: 5),
-                // Ana mesaj
-                Expanded(
-                  child: Text(
-                    campaign.title,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.3,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Aksiyon
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+    return Padding(
+      padding: const EdgeInsets.only(right: 14),
+      child: PressableScale(
+        borderRadius: BorderRadius.circular(18),
+        pressedScale: 0.99,
+        onTap: () => _showCampaignDetail(campaign),
+        child: Container(
+          width: width,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: surface.bg,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Üst label
+                  if (campaign.label != null)
                     Text(
-                      'İncele',
+                      campaign.label!,
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
+                        color: surface.accentColor.withAlpha(180),
+                        letterSpacing: 0.9,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (campaign.label != null) const SizedBox(height: 4),
+                  // Büyük tipografik vurgu
+                  if (campaign.accentValue != null)
+                    Text(
+                      campaign.accentValue!,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w800,
                         color: surface.accentColor,
+                        height: 1.0,
+                        letterSpacing: -1.2,
                       ),
                     ),
-                    const SizedBox(width: 3),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 13,
-                      color: surface.accentColor,
+                  if (campaign.accentValue != null) const SizedBox(height: 5),
+                  // Ana mesaj
+                  Expanded(
+                    child: Text(
+                      campaign.title,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 1.3,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Aksiyon
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'İncele',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: surface.accentColor,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: surface.accentColor,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -756,7 +767,8 @@ class _HomeScreenState extends State<HomeScreen>
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildReorderDock() {
     final product = MockData.lastOrder;
-    final price = product.price +
+    final price =
+        product.price +
         (product.availableSizes?[1].priceDelta ?? 0) +
         (product.availableMilkOptions?[1].priceDelta ?? 0);
 
@@ -844,6 +856,7 @@ class _HomeScreenState extends State<HomeScreen>
                 PressableScale(
                   semanticLabel: 'Tekrar sepete ekle',
                   onTap: _onReorder,
+                  borderRadius: BorderRadius.circular(999),
                   child: AnimatedContainer(
                     duration: AppMotion.fast,
                     curve: AppMotion.standard,
@@ -950,7 +963,10 @@ class _HomeScreenState extends State<HomeScreen>
     return SizedBox(
       height: 196,
       child: AnimatedSwitcher(
-        duration: AppMotion.duration(context, const Duration(milliseconds: 180)),
+        duration: AppMotion.duration(
+          context,
+          const Duration(milliseconds: 180),
+        ),
         switchInCurve: AppMotion.entrance,
         switchOutCurve: AppMotion.exit,
         child: ListView.builder(

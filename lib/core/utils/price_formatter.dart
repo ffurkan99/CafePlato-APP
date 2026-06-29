@@ -7,7 +7,7 @@ class PriceFormatter {
     String formatted = price.truncateToDouble() == price
         ? price.toInt().toString()
         : price.toStringAsFixed(2);
-        
+
     List<String> parts = formatted.split('.');
     String intPart = parts[0];
     String res = '';
@@ -17,11 +17,11 @@ class PriceFormatter {
       }
       res += intPart[i];
     }
-    
+
     if (parts.length > 1) {
       res += ',${parts[1]}';
     }
-    
+
     return '$res ${AppConstants.currency}';
   }
 }

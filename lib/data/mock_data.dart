@@ -165,8 +165,20 @@ class MockData {
   ];
 
   static final List<LoyaltyTransaction> recentTransactions = [
-    LoyaltyTransaction(id: '1', description: 'Iced Latte satın alımı', pointDelta: 45),
-    LoyaltyTransaction(id: '2', description: 'Caramel Macchiato satın alımı', pointDelta: 50),
-    LoyaltyTransaction(id: '3', description: 'Kupon kullanımı', pointDelta: -200),
+    LoyaltyTransaction(
+      id: '1',
+      description: 'Iced Latte satın alımı',
+      pointDelta: 45,
+    ),
+    LoyaltyTransaction(
+      id: '2',
+      description: 'Caramel Macchiato satın alımı',
+      pointDelta: 50,
+    ),
+    LoyaltyTransaction(
+      id: '3',
+      description: 'Kupon kullanımı',
+      pointDelta: -200,
+    ),
   ];
 }

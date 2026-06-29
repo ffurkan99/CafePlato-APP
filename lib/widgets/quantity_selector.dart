@@ -61,6 +61,7 @@ class QuantitySelector extends StatelessWidget {
   }) {
     return PressableScale(
       onTap: isEnabled ? onTap : null,
+      borderRadius: BorderRadius.circular(999),
       semanticLabel: icon == Icons.add_rounded ? 'Adedi artır' : 'Adedi azalt',
       child: Container(
         width: 32,

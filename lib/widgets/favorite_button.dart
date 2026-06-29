@@ -50,6 +50,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
           ? 'Favorilerden çıkar'
           : 'Favorilere ekle',
       selected: widget.isFavorite,
+      borderRadius: BorderRadius.circular(999),
       onTap: () {
         HapticFeedback.selectionClick();
         widget.onTap();

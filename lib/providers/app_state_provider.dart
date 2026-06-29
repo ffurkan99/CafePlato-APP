@@ -4,7 +4,7 @@ import '../models/branch.dart';
 
 class AppStateProvider extends ChangeNotifier {
   Branch _selectedBranch = MockData.branches.first;
-  
+
   // Notification settings
   bool _campaignNotifications = true;
   bool _orderStatusNotifications = true;

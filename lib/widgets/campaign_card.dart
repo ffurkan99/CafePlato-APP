@@ -15,19 +15,19 @@ class CampaignCard extends StatelessWidget {
   /// Kart yüzey rengi ve aksan rengi — surfaceVariant'a göre
   static const List<_CardSurface> _surfaces = [
     _CardSurface(
-      bg: AppColors.primaryLight,         // Açık bordo
+      bg: AppColors.primaryLight, // Açık bordo
       accent: AppColors.primary,
       accentText: Colors.white,
       arcColor: AppColors.primary,
     ),
     _CardSurface(
-      bg: AppColors.champagneLight,       // Sıcak bej
+      bg: AppColors.champagneLight, // Sıcak bej
       accent: Color(0xFF6B4E3D),
       accentText: Colors.white,
       arcColor: AppColors.champagne,
     ),
     _CardSurface(
-      bg: Color(0xFFF5F3F0),             // Kırık beyaz
+      bg: Color(0xFFF5F3F0), // Kırık beyaz
       accent: AppColors.textPrimary,
       accentText: Colors.white,
       arcColor: AppColors.border,
@@ -81,98 +81,102 @@ class CampaignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface = _surface;
 
-    return PressableScale(
-      onTap: () => _showCampaignDetails(context),
-      child: Container(
-        width: width,
-        margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: surface.bg,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Stack(
-          children: [
-            // CafePlato Arc dekoratif motif
-            Positioned.fill(
-              child: CafePlatoArc(
-                color: surface.arcColor,
-                opacity: 0.1,
-                alignment: Alignment.bottomRight,
-                innerRadiusFactor: 0.6,
-                outerRadiusFactor: 0.82,
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Üst küçük label
-                if (campaign.label != null)
-                  Text(
-                    campaign.label!,
-                    style: AppTextStyles.label.copyWith(
-                      color: surface.accent.withAlpha(180),
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                      fontSize: 10,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (campaign.label != null) const SizedBox(height: 6),
-                // Büyük tipografik vurgu
-                if (campaign.accentValue != null)
-                  Text(
-                    campaign.accentValue!,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: surface.accent,
-                      height: 1.0,
-                      letterSpacing: -1.0,
-                    ),
-                  ),
-                if (campaign.accentValue != null) const SizedBox(height: 6),
-                // Ana mesaj
-                Expanded(
-                  child: Text(
-                    campaign.title,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      height: 1.35,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: PressableScale(
+        borderRadius: BorderRadius.circular(18),
+        pressedScale: 0.99,
+        onTap: () => _showCampaignDetails(context),
+        child: Container(
+          width: width,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: surface.bg,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Stack(
+            children: [
+              // CafePlato Arc dekoratif motif
+              Positioned.fill(
+                child: CafePlatoArc(
+                  color: surface.arcColor,
+                  opacity: 0.1,
+                  alignment: Alignment.bottomRight,
+                  innerRadiusFactor: 0.6,
+                  outerRadiusFactor: 0.82,
                 ),
-                const SizedBox(height: 12),
-                // İncele aksiyonu
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Üst küçük label
+                  if (campaign.label != null)
                     Text(
-                      'İncele',
+                      campaign.label!,
+                      style: AppTextStyles.label.copyWith(
+                        color: surface.accent.withAlpha(180),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        fontSize: 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (campaign.label != null) const SizedBox(height: 6),
+                  // Büyük tipografik vurgu
+                  if (campaign.accentValue != null)
+                    Text(
+                      campaign.accentValue!,
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
                         color: surface.accent,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
+                        height: 1.0,
+                        letterSpacing: -1.0,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 13,
-                      color: surface.accent,
+                  if (campaign.accentValue != null) const SizedBox(height: 6),
+                  // Ana mesaj
+                  Expanded(
+                    child: Text(
+                      campaign.title,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                  ),
+                  const SizedBox(height: 12),
+                  // İncele aksiyonu
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'İncele',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          color: surface.accent,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: surface.accent,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

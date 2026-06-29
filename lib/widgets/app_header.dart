@@ -25,15 +25,9 @@ class AppHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.heading1,
-                ),
+                Text(title, style: AppTextStyles.heading1),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.bodyMedium,
-                ),
+                Text(subtitle, style: AppTextStyles.bodyMedium),
               ],
             ),
           ),
@@ -63,7 +57,7 @@ class AppHeader extends StatelessWidget {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

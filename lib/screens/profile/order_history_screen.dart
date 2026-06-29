@@ -62,7 +62,10 @@ class OrderHistoryScreen extends StatelessWidget {
                   children: [
                     Text(order['date']!, style: AppTextStyles.bodySmall),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withAlpha(20),
                         borderRadius: BorderRadius.circular(12),
@@ -81,13 +84,20 @@ class OrderHistoryScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.storefront_rounded, size: 20, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.storefront_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Text(order['branch']!, style: AppTextStyles.bodyMedium),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(order['items']!, style: AppTextStyles.heading3.copyWith(fontSize: 14)),
+                Text(
+                  order['items']!,
+                  style: AppTextStyles.heading3.copyWith(fontSize: 14),
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Divider(),
@@ -96,7 +106,12 @@ class OrderHistoryScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Toplam Tutar', style: AppTextStyles.bodyMedium),
-                    Text(order['total']!, style: AppTextStyles.heading3.copyWith(color: AppColors.primary)),
+                    Text(
+                      order['total']!,
+                      style: AppTextStyles.heading3.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
               ],

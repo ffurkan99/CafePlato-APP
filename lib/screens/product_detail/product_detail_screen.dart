@@ -16,6 +16,7 @@ import '../../../widgets/quantity_selector.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/favorite_button.dart';
 import '../../../widgets/pressable_scale.dart';
+import '../../../widgets/app_feedback.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -66,19 +67,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
     HapticFeedback.lightImpact();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.product.name} sepete eklendi.'),
-        action: SnackBarAction(
-          label: 'Sepete Git',
-          onPressed: () {
-            // Need to close detail screen and switch tab to Cart.
-            // We can just close for now, user can use tab. Or we could pop to root and set tab.
-            Navigator.pop(context);
-          },
-        ),
-        duration: const Duration(seconds: 3),
-      ),
+    AppFeedback.show(
+      context,
+      '${widget.product.name} sepete eklendi.',
+      type: AppFeedbackType.success,
     );
     Navigator.pop(context);
   }
@@ -134,7 +126,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      ProductIconHelper.iconForCategory(widget.product.category),
+                      ProductIconHelper.iconForCategory(
+                        widget.product.category,
+                      ),
                       size: 80,
                       color: ProductIconHelper.iconColorForCategory(
                         widget.product.category,
@@ -185,25 +179,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ) {
                               final isSelected = _selectedSize == size;
                               return Expanded(
-                                child: PressableScale(
-                                  semanticLabel: '${size.name} boy',
-                                  selected: isSelected,
-                                  onTap: () {
-                                    if (isSelected) return;
-                                    HapticFeedback.selectionClick();
-                                    setState(() {
-                                      _selectedSize = size;
-                                    });
-                                  },
-                                  child: AnimatedScale(
-                                    scale: isSelected ? 1 : 0.98,
-                                    duration: AppMotion.duration(
-                                      context,
-                                      AppMotion.normal,
-                                    ),
-                                    curve: AppMotion.standard,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: PressableScale(
+                                    semanticLabel: '${size.name} boy',
+                                    selected: isSelected,
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      if (isSelected) return;
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        _selectedSize = size;
+                                      });
+                                    },
                                     child: AnimatedContainer(
-                                      margin: const EdgeInsets.only(right: 8),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12,
                                       ),
@@ -292,6 +281,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               return PressableScale(
                                 semanticLabel: '${milk.name} süt seçeneği',
                                 selected: isSelected,
+                                borderRadius: BorderRadius.circular(20),
                                 onTap: () {
                                   if (isSelected) return;
                                   HapticFeedback.selectionClick();
@@ -330,9 +320,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       color: isSelected
                                           ? AppColors.primary
                                           : AppColors.textPrimary,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.w400,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     child: Text(milk.name),
                                   ),
@@ -355,6 +343,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               pressedScale: 0.99,
                               semanticLabel: '${extra.name} ekstra seçeneği',
                               selected: isSelected,
+                              borderRadius: BorderRadius.circular(12),
                               onTap: () {
                                 HapticFeedback.selectionClick();
                                 setState(() {

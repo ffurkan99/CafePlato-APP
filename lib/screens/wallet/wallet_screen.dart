@@ -7,17 +7,13 @@ import '../../providers/app_state_provider.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/pressable_scale.dart';
 import '../../widgets/cafe_plato_arc.dart';
+import '../../widgets/app_feedback.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
 
   void _showCouponSnackBar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Kupon kullanımı prototipte henüz aktif değil.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    AppFeedback.show(context, 'Kupon kullanımı prototipte henüz aktif değil.');
   }
 
   @override
@@ -39,151 +35,139 @@ class WalletScreen extends StatelessWidget {
             child: SectionHeader(title: 'Aktif Kuponlar'),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final coupon = MockData.coupons[index];
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    left: 24,
-                    right: 24,
-                    bottom: 10,
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final coupon = MockData.coupons[index];
+              return Padding(
+                padding: const EdgeInsets.only(left: 24, right: 24, bottom: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                  child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border, width: 0.8),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.card_giftcard_rounded,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          coupon.title,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      PressableScale(
+                        semanticLabel: '${coupon.title} kuponunu kullan',
+                        onTap: () => _showCouponSnackBar(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            'Kullan',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }, childCount: MockData.coupons.length),
+          ),
+          const SliverToBoxAdapter(child: SectionHeader(title: 'Son İşlemler')),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final transaction = MockData.recentTransactions[index];
+              final isPositive = transaction.pointDelta > 0;
+              return Column(
+                children: [
+                  Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 24,
                       vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border, width: 0.8),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(10),
+                            color: isPositive
+                                ? AppColors.success.withValues(alpha: 0.1)
+                                : AppColors.primaryLight,
+                            shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.card_giftcard_rounded,
-                            color: AppColors.primary,
-                            size: 18,
+                          child: Icon(
+                            isPositive
+                                ? Icons.add_rounded
+                                : Icons.remove_rounded,
+                            color: isPositive
+                                ? AppColors.success
+                                : AppColors.primary,
+                            size: 16,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            coupon.title,
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            transaction.description,
+                            style: AppTextStyles.bodyLarge,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        PressableScale(
-                          semanticLabel: '${coupon.title} kuponunu kullan',
-                          onTap: () => _showCouponSnackBar(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              'Kullan',
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.fontFamily,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
+                        Text(
+                          '${isPositive ? '+' : ''}${transaction.pointDelta}',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            color: isPositive
+                                ? AppColors.success
+                                : AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
                           ),
                         ),
                       ],
                     ),
                   ),
-                );
-              },
-              childCount: MockData.coupons.length,
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Son İşlemler'),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final transaction = MockData.recentTransactions[index];
-                final isPositive = transaction.pointDelta > 0;
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isPositive
-                                  ? AppColors.success.withValues(alpha: 0.1)
-                                  : AppColors.primaryLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isPositive
-                                  ? Icons.add_rounded
-                                  : Icons.remove_rounded,
-                              color: isPositive
-                                  ? AppColors.success
-                                  : AppColors.primary,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              transaction.description,
-                              style: AppTextStyles.bodyLarge,
-                            ),
-                          ),
-                          Text(
-                            '${isPositive ? '+' : ''}${transaction.pointDelta}',
-                            style: TextStyle(
-                              fontFamily: AppTextStyles.fontFamily,
-                              color: isPositive
-                                  ? AppColors.success
-                                  : AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                  if (index < MockData.recentTransactions.length - 1)
+                    const Divider(
+                      height: 1,
+                      indent: 64,
+                      endIndent: 24,
+                      color: AppColors.border,
                     ),
-                    if (index < MockData.recentTransactions.length - 1)
-                      const Divider(
-                        height: 1,
-                        indent: 64,
-                        endIndent: 24,
-                        color: AppColors.border,
-                      ),
-                  ],
-                );
-              },
-              childCount: MockData.recentTransactions.length,
-            ),
+                ],
+              );
+            }, childCount: MockData.recentTransactions.length),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -235,17 +219,23 @@ class WalletScreen extends StatelessWidget {
                 // Üst satır: Club label + Gold badge
                 Row(
                   children: [
-                    Text(
-                      'CAFEPLATO CLUB',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        color: Colors.white.withAlpha(180),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.6,
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'CAFEPLATO CLUB',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            color: Colors.white.withAlpha(180),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.6,
+                          ),
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -283,32 +273,36 @@ class WalletScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 // Puan gösterimi
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '1.240',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 38,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: -1.5,
-                        height: 1.0,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '1.240',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 38,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -1.5,
+                          height: 1.0,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'CafePuan',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 14,
-                        color: Colors.white.withAlpha(180),
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(width: 8),
+                      Text(
+                        'CafePuan',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 14,
+                          color: Colors.white.withAlpha(180),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 6),
                 // Şube

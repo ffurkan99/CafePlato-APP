@@ -21,39 +21,43 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final duration = AppMotion.duration(context, AppMotion.normal);
 
-    return PressableScale(
-      semanticLabel: '$label kategorisi',
-      selected: isSelected,
-      onTap: () {
-        if (!isSelected) {
-          HapticFeedback.selectionClick();
-          onTap();
-        }
-      },
-      child: AnimatedContainer(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        alignment: Alignment.center,
-        duration: duration,
-        curve: AppMotion.standard,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: 1.0,
-          ),
-        ),
-        child: AnimatedDefaultTextStyle(
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: PressableScale(
+        semanticLabel: '$label kategorisi',
+        selected: isSelected,
+        pressedScale: 0.98,
+        borderRadius: BorderRadius.circular(999),
+        onTap: () {
+          if (!isSelected) {
+            HapticFeedback.selectionClick();
+            onTap();
+          }
+        },
+        child: AnimatedContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          alignment: Alignment.center,
           duration: duration,
           curve: AppMotion.standard,
-          style: TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontSize: 13,
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryLight : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: 1.0,
+            ),
           ),
-          child: Text(label),
+          child: AnimatedDefaultTextStyle(
+            duration: duration,
+            curve: AppMotion.standard,
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 13,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+            child: Text(label),
+          ),
         ),
       ),
     );

@@ -35,7 +35,7 @@ class CartProvider extends ChangeNotifier {
       if (item.product.id != product.id) return false;
       if (item.selectedSize?.name != size?.name) return false;
       if (item.selectedMilk?.name != milk?.name) return false;
-      
+
       // Check extras equality
       if (item.selectedExtras.length != extras.length) return false;
       final existingExtraIds = item.selectedExtras.map((e) => e.id).toSet();
@@ -64,7 +64,9 @@ class CartProvider extends ChangeNotifier {
   }
 
   void incrementQuantity(String uniqueCartId) {
-    final index = _items.indexWhere((item) => item.uniqueCartId == uniqueCartId);
+    final index = _items.indexWhere(
+      (item) => item.uniqueCartId == uniqueCartId,
+    );
     if (index >= 0) {
       _items[index].quantity++;
       notifyListeners();
@@ -72,7 +74,9 @@ class CartProvider extends ChangeNotifier {
   }
 
   void decrementQuantity(String uniqueCartId) {
-    final index = _items.indexWhere((item) => item.uniqueCartId == uniqueCartId);
+    final index = _items.indexWhere(
+      (item) => item.uniqueCartId == uniqueCartId,
+    );
     if (index >= 0) {
       if (_items[index].quantity > 1) {
         _items[index].quantity--;

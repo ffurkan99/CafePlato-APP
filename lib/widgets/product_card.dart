@@ -13,6 +13,7 @@ import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../screens/product_detail/product_detail_screen.dart';
+import 'app_feedback.dart';
 import 'favorite_button.dart';
 import 'pressable_scale.dart';
 
@@ -53,11 +54,10 @@ class _ProductCardState extends State<ProductCard> {
       _addedFeedbackTimer = Timer(const Duration(milliseconds: 650), () {
         if (mounted) setState(() => _justAdded = false);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${product.name} sepete eklendi.'),
-          duration: const Duration(milliseconds: 1400),
-        ),
+      AppFeedback.show(
+        context,
+        '${product.name} sepete eklendi.',
+        type: AppFeedbackType.success,
       );
     }
   }
@@ -70,10 +70,13 @@ class _ProductCardState extends State<ProductCard> {
 
     final iconBg = ProductIconHelper.backgroundForCategory(product.category);
 
-    return GestureDetector(
-      onTap: () {
-        AppNavigator.push(context, ProductDetailScreen(product: product));
-      },
+    return PressableScale(
+      pressedScale: 0.99,
+      borderRadius: BorderRadius.circular(16),
+      hoverColor: AppColors.primary,
+      allowChildInteractions: true,
+      onTap: () =>
+          AppNavigator.push(context, ProductDetailScreen(product: product)),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
@@ -161,6 +164,7 @@ class _ProductCardState extends State<ProductCard> {
                         PressableScale(
                           semanticLabel: '${product.name} sepete ekle',
                           onTap: () => _onAddPressed(context),
+                          borderRadius: BorderRadius.circular(999),
                           child: Container(
                             width: 28,
                             height: 28,

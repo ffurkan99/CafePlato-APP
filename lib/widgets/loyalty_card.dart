@@ -144,8 +144,7 @@ class LoyaltyCard extends StatelessWidget {
         const lineHeight = 1.5;
         // Her bir ikon alanı için eşit genişlik bırak
         final stepWidth =
-            (constraints.maxWidth - iconSize * _totalSteps) /
-            (_totalSteps - 1);
+            (constraints.maxWidth - iconSize * _totalSteps) / (_totalSteps - 1);
 
         return SizedBox(
           height: iconSize,
@@ -156,7 +155,9 @@ class LoyaltyCard extends StatelessWidget {
               for (int i = 0; i < _totalSteps - 1; i++)
                 Positioned(
                   left:
-                      iconSize * (i + 1) + stepWidth * i + (stepWidth / 2) -
+                      iconSize * (i + 1) +
+                      stepWidth * i +
+                      (stepWidth / 2) -
                       (stepWidth / 2),
                   child: Container(
                     width: stepWidth,
@@ -183,9 +184,7 @@ class LoyaltyCard extends StatelessWidget {
                           : AppColors.background,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isActive
-                            ? AppColors.primary
-                            : AppColors.border,
+                        color: isActive ? AppColors.primary : AppColors.border,
                         width: 1.0,
                       ),
                     ),
@@ -197,9 +196,7 @@ class LoyaltyCard extends StatelessWidget {
                           )
                         : Icon(
                             Icons.local_cafe_rounded,
-                            color: isActive
-                                ? Colors.white
-                                : AppColors.border,
+                            color: isActive ? Colors.white : AppColors.border,
                             size: 14,
                           ),
                   );

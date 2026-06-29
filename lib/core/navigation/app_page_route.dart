@@ -23,6 +23,8 @@ class AppPageRoute {
     }
 
     return PageRouteBuilder<T>(
+      opaque: true,
+      barrierColor: null,
       pageBuilder: (context, animation, secondaryAnimation) => builder(context),
       settings: settings,
       fullscreenDialog: fullscreenDialog,

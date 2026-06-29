@@ -14,6 +14,7 @@ import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../screens/product_detail/product_detail_screen.dart';
+import 'app_feedback.dart';
 import 'favorite_button.dart';
 import 'pressable_scale.dart';
 
@@ -57,11 +58,10 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
       _addedFeedbackTimer = Timer(const Duration(milliseconds: 650), () {
         if (mounted) setState(() => _justAdded = false);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${product.name} sepete eklendi.'),
-          duration: const Duration(milliseconds: 1400),
-        ),
+      AppFeedback.show(
+        context,
+        '${product.name} sepete eklendi.',
+        type: AppFeedbackType.success,
       );
     }
   }
@@ -75,8 +75,13 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
     final iconColor = ProductIconHelper.iconColorForCategory(product.category);
     final icon = ProductIconHelper.iconForCategory(product.category);
 
-    return GestureDetector(
-      onTap: () => AppNavigator.push(context, ProductDetailScreen(product: product)),
+    return PressableScale(
+      pressedScale: 0.99,
+      borderRadius: BorderRadius.circular(18),
+      hoverColor: AppColors.primary,
+      allowChildInteractions: true,
+      onTap: () =>
+          AppNavigator.push(context, ProductDetailScreen(product: product)),
       child: Container(
         // Genişlik dışarıdan SizedBox ile yönetilir
         decoration: BoxDecoration(
@@ -110,7 +115,9 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
                       isFavorite: isFavorite,
                       backgroundColor: AppColors.cardBackground.withAlpha(220),
                       onTap: () {
-                        context.read<FavoritesProvider>().toggleFavorite(product);
+                        context.read<FavoritesProvider>().toggleFavorite(
+                          product,
+                        );
                       },
                     ),
                   ),
@@ -157,6 +164,7 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
                         PressableScale(
                           semanticLabel: '${product.name} sepete ekle',
                           onTap: () => _onAddPressed(context),
+                          borderRadius: BorderRadius.circular(999),
                           child: Container(
                             width: 30,
                             height: 30,
@@ -166,13 +174,22 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
                               shape: BoxShape.circle,
                             ),
                             child: AnimatedSwitcher(
-                              duration: AppMotion.duration(context, AppMotion.fast),
-                              transitionBuilder: (child, animation) => FadeTransition(
-                                opacity: animation,
-                                child: ScaleTransition(scale: animation, child: child),
+                              duration: AppMotion.duration(
+                                context,
+                                AppMotion.fast,
                               ),
+                              transitionBuilder: (child, animation) =>
+                                  FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  ),
                               child: Icon(
-                                _justAdded ? Icons.check_rounded : Icons.add_rounded,
+                                _justAdded
+                                    ? Icons.check_rounded
+                                    : Icons.add_rounded,
                                 key: ValueKey(_justAdded),
                                 color: Colors.white,
                                 size: 18,

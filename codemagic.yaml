@@ -69,46 +69,45 @@ workflows:
           set -e
           flutter pub get
 
-      - name: Install CocoaPods
-        script: |
-          set -e
-          cd ios
-          pod install
-          cd ..
-
       - name: Build unsigned iOS app for device
         script: |
           set -e
 
+          # Gerçek iPhone mimarisi için imzasız Runner.app üretir.
           # Simulator build değildir.
-          # Gerçek iPhone mimarisi için imzasız Runner.app oluşturur.
           flutter build ios --release --no-codesign
 
-          echo "Unsigned iOS application generated:"
-          ls -lah "$CM_BUILD_DIR/build/ios/iphoneos"
+          APP_PATH="$CM_BUILD_DIR/build/ios/iphoneos/Runner.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app bulunamadı:"
+            echo "$APP_PATH"
+
+            echo "build/ios içeriği:"
+            find "$CM_BUILD_DIR/build/ios" -maxdepth 4 -print || true
+
+            exit 1
+          fi
+
+          echo "Runner.app başarıyla oluşturuldu:"
+          ls -lah "$APP_PATH"
 
       - name: Package unsigned iOS artifacts
         script: |
           set -e
 
           APP_PATH="$CM_BUILD_DIR/build/ios/iphoneos/Runner.app"
-          OUTPUT_DIR="$CM_BUILD_DIR/build/ios/artifacts"
+          OUTPUT_DIR="$CM_BUILD_DIR/build/ios/export"
           PAYLOAD_DIR="$OUTPUT_DIR/Payload"
-
-          if [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: Runner.app was not found at:"
-            echo "$APP_PATH"
-            exit 1
-          fi
 
           rm -rf "$OUTPUT_DIR"
           mkdir -p "$PAYLOAD_DIR"
 
-          # Runner.app dosyasını Payload içine kopyala.
+          # Runner.app dosyasını Payload klasörüne kopyala.
           cp -R "$APP_PATH" "$PAYLOAD_DIR/Runner.app"
 
-          # 1. Dün kullandığın yönteme benzer:
-          # ZIP açılınca doğrudan Runner.app çıkar.
+          # 1. Senin eski yöntemde kullandığın Runner.app ZIP dosyası.
+          # ZIP açıldığında Runner.app çıkar.
           /usr/bin/ditto \
             -c \
             -k \
@@ -117,7 +116,8 @@ workflows:
             "$APP_PATH" \
             "$OUTPUT_DIR/CafePlato-RunnerApp.zip"
 
-          # 2. ZIP açılınca Payload/Runner.app yapısı çıkar.
+          # 2. Hazır Payload klasörü içeren ZIP dosyası.
+          # ZIP açıldığında Payload/Runner.app çıkar.
           cd "$OUTPUT_DIR"
 
           /usr/bin/ditto \
@@ -128,26 +128,19 @@ workflows:
             Payload \
             CafePlato-Payload.zip
 
-          # 3. Aynı Payload paketinin .ipa uzantılı kopyası.
+          # 3. Aynı Payload paketinin doğrudan .ipa uzantılı hâli.
           cp CafePlato-Payload.zip CafePlato-unsigned.ipa
 
           echo ""
-          echo "Generated iOS artifacts:"
+          echo "Oluşturulan dosyalar:"
           ls -lah "$OUTPUT_DIR"
 
           echo ""
-          echo "Payload contents:"
+          echo "Payload yapısı:"
           find "$PAYLOAD_DIR" -maxdepth 2 -print
 
     artifacts:
-      # Runner.app içeren ZIP
-      - build/ios/artifacts/CafePlato-RunnerApp.zip
-
-      # Hazır Payload klasörü içeren ZIP
-      - build/ios/artifacts/CafePlato-Payload.zip
-
-      # Haricî araçla imzalanmak üzere hazırlanmış unsigned IPA
-      - build/ios/artifacts/CafePlato-unsigned.ipa
-
-      # Sorun çıkarsa incelemek için Xcode logları
+      - build/ios/export/CafePlato-RunnerApp.zip
+      - build/ios/export/CafePlato-Payload.zip
+      - build/ios/export/CafePlato-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log

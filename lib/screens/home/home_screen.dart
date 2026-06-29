@@ -13,6 +13,7 @@ import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/pressable_scale.dart';
+import '../../core/utils/product_icon_helper.dart';
 
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
@@ -179,27 +180,34 @@ class _HomeScreenState extends State<HomeScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 14,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: AppColors.champagne),
+                    border: Border.all(color: AppColors.border, width: 0.8),
                   ),
                   child: Row(
                     children: [
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: const BoxDecoration(
-                          color: AppColors.background,
+                        decoration: BoxDecoration(
+                          color: ProductIconHelper.backgroundForCategory(
+                            MockData.lastOrder.category,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          MockData.lastOrder.placeholderIcon,
-                          style: const TextStyle(fontSize: 18),
+                        child: Icon(
+                          ProductIconHelper.iconForCategory(
+                            MockData.lastOrder.category,
+                          ),
+                          size: 18,
+                          color: ProductIconHelper.iconColorForCategory(
+                            MockData.lastOrder.category,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -213,6 +221,8 @@ class _HomeScreenState extends State<HomeScreen>
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               'Orta boy',
@@ -287,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen>
                 crossAxisCount: 2,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 0.60,
+                childAspectRatio: 0.72,
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final product = _filteredProducts[index];

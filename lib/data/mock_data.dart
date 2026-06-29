@@ -19,18 +19,27 @@ class MockData {
   static final List<Campaign> campaigns = [
     Campaign(
       id: '1',
-      title: 'Soğuk kahvelerde ikinci ürün %50 indirimli',
-      description: 'Yaz aylarına özel tüm soğuk kahvelerde geçerli.',
+      title: 'İkinci soğuk kahven yarı fiyatına.',
+      description: 'Tüm soğuk kahvelerde geçerli.',
+      accentValue: '%50',
+      label: 'SOĞUK KAHVE GÜNLERİ',
+      surfaceVariant: 0, // açık bordo
     ),
     Campaign(
       id: '2',
-      title: 'CafePuan ile kahveni ücretsiz al',
+      title: 'Puan biriktir, kahveni ücretsiz al.',
       description: 'Biriktirdiğin puanlarla dilediğin kahve bedava.',
+      accentValue: '2×',
+      label: 'CAFÉPUAN KAMPANYASI',
+      surfaceVariant: 1, // sıcak bej
     ),
     Campaign(
       id: '3',
-      title: 'Tatlı ve kahve birlikte daha avantajlı',
+      title: 'Tatlı + kahve kombosunda avantajlı fiyat.',
       description: 'Seçili tatlılarda kahve alımına özel fiyatlar.',
+      accentValue: '+200',
+      label: 'TATLIM SANA',
+      surfaceVariant: 2, // kırık beyaz
     ),
   ];
 

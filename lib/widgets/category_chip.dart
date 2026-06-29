@@ -41,7 +41,7 @@ class CategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 1 : 1,
+            width: 1.0,
           ),
         ),
         child: AnimatedDefaultTextStyle(

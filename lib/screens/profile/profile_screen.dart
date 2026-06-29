@@ -92,36 +92,39 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.champagneLight,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.champagne),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.star_rounded,
-                  color: AppColors.champagne,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                const Flexible(
-                  child: Text(
-                    'Gold Üye • 1.240 Puan',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.champagneLight,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.champagne, width: 0.8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.champagne,
+                    size: 13,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  const Flexible(
+                    child: Text(
+                      'Gold Üye • 1.240 Puan',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -181,15 +184,40 @@ class ProfileScreen extends StatelessWidget {
                       _showNotImplementedSnackBar(context, 'Uygulama Hakkında'),
                   isLast: true,
                 ),
-                const SizedBox(height: 48),
-                Center(
-                  child: GestureDetector(
+                // Çıkış Yap — Destek grubunun altında, kontrollü konum
+                const SizedBox(height: 32),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: PressableScale(
+                    semanticLabel: 'Çıkış Yap',
                     onTap: () => _showLogoutDialog(context),
-                    child: Text(
-                      'Çıkış Yap',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
+                    pressedScale: 0.97,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: const Icon(
+                              Icons.logout_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Çıkış Yap',
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

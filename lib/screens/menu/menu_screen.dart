@@ -127,7 +127,7 @@ class _MenuScreenState extends State<MenuScreen> {
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(100),
-                border: Border.all(color: AppColors.champagneLight),
+                border: Border.all(color: AppColors.border, width: 0.8),
               ),
               child: TextField(
                 controller: _searchController,
@@ -210,7 +210,7 @@ class _MenuScreenState extends State<MenuScreen> {
                           crossAxisCount: 2,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
-                          childAspectRatio: 0.60,
+                          childAspectRatio: 0.72,
                         ),
                     itemCount: products.length,
                     itemBuilder: (context, index) {

@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/price_formatter.dart';
+import '../../core/utils/product_icon_helper.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../widgets/quantity_selector.dart';
@@ -151,16 +152,23 @@ class _CartScreenState extends State<CartScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: 64,
-                              height: 64,
+                              width: 56,
+                              height: 56,
                               decoration: BoxDecoration(
-                                color: AppColors.background,
+                                color: ProductIconHelper.backgroundForCategory(
+                                  item.product.category,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               alignment: Alignment.center,
-                              child: Text(
-                                item.product.placeholderIcon,
-                                style: const TextStyle(fontSize: 32),
+                              child: Icon(
+                                ProductIconHelper.iconForCategory(
+                                  item.product.category,
+                                ),
+                                size: 26,
+                                color: ProductIconHelper.iconColorForCategory(
+                                  item.product.category,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),

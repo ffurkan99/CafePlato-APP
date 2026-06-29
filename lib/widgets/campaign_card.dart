@@ -3,12 +3,41 @@ import '../../core/navigation/app_modal.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/campaign.dart';
+import 'cafe_plato_arc.dart';
+import 'pressable_scale.dart';
 
 class CampaignCard extends StatelessWidget {
   final Campaign campaign;
   final double width;
 
   const CampaignCard({super.key, required this.campaign, required this.width});
+
+  /// Kart yüzey rengi ve aksan rengi — surfaceVariant'a göre
+  static const List<_CardSurface> _surfaces = [
+    _CardSurface(
+      bg: AppColors.primaryLight,         // Açık bordo
+      accent: AppColors.primary,
+      accentText: Colors.white,
+      arcColor: AppColors.primary,
+    ),
+    _CardSurface(
+      bg: AppColors.champagneLight,       // Sıcak bej
+      accent: Color(0xFF6B4E3D),
+      accentText: Colors.white,
+      arcColor: AppColors.champagne,
+    ),
+    _CardSurface(
+      bg: Color(0xFFF5F3F0),             // Kırık beyaz
+      accent: AppColors.textPrimary,
+      accentText: Colors.white,
+      arcColor: AppColors.border,
+    ),
+  ];
+
+  _CardSurface get _surface {
+    final idx = campaign.surfaceVariant.clamp(0, _surfaces.length - 1);
+    return _surfaces[idx];
+  }
 
   void _showCampaignDetails(BuildContext context) {
     AppModal.showBottomSheet(
@@ -20,17 +49,16 @@ class CampaignCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(12),
+              if (campaign.label != null)
+                Text(
+                  campaign.label!,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.local_offer, color: AppColors.primary),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Text(campaign.title, style: AppTextStyles.heading2),
               const SizedBox(height: 8),
               Text(campaign.description, style: AppTextStyles.bodyLarge),
@@ -51,65 +79,117 @@ class CampaignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.champagneLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+    final surface = _surface;
+
+    return PressableScale(
+      onTap: () => _showCampaignDetails(context),
+      child: Container(
+        width: width,
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: surface.bg,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Stack(
+          children: [
+            // CafePlato Arc dekoratif motif
+            Positioned.fill(
+              child: CafePlatoArc(
+                color: surface.arcColor,
+                opacity: 0.1,
+                alignment: Alignment.bottomRight,
+                innerRadiusFactor: 0.6,
+                outerRadiusFactor: 0.82,
+              ),
             ),
-            child: const Icon(
-              Icons.star_rounded,
-              color: AppColors.primary,
-              size: 16,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            campaign.title,
-            style: AppTextStyles.heading3.copyWith(
-              fontSize: 16,
-              color: AppColors.primary,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => _showCampaignDetails(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'İncele',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                // Üst küçük label
+                if (campaign.label != null)
+                  Text(
+                    campaign.label!,
+                    style: AppTextStyles.label.copyWith(
+                      color: surface.accent.withAlpha(180),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (campaign.label != null) const SizedBox(height: 6),
+                // Büyük tipografik vurgu
+                if (campaign.accentValue != null)
+                  Text(
+                    campaign.accentValue!,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      color: surface.accent,
+                      height: 1.0,
+                      letterSpacing: -1.0,
+                    ),
+                  ),
+                if (campaign.accentValue != null) const SizedBox(height: 6),
+                // Ana mesaj
+                Expanded(
+                  child: Text(
+                    campaign.title,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      height: 1.35,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 14,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 12),
+                // İncele aksiyonu
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'İncele',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        color: surface.accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 13,
+                      color: surface.accent,
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Yüzey rengi ve aksan renk grubu.
+class _CardSurface {
+  final Color bg;
+  final Color accent;
+  final Color accentText;
+  final Color arcColor;
+
+  const _CardSurface({
+    required this.bg,
+    required this.accent,
+    required this.accentText,
+    required this.arcColor,
+  });
 }

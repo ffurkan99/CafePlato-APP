@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/price_formatter.dart';
+import '../../../core/utils/product_icon_helper.dart';
 import '../../../models/product.dart';
 import '../../../models/product_size_option.dart';
 import '../../../models/milk_option.dart';
@@ -123,16 +124,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Container(
                     width: double.infinity,
                     height: 240,
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      color: ProductIconHelper.backgroundForCategory(
+                        widget.product.category,
+                      ),
+                      borderRadius: const BorderRadius.vertical(
                         bottom: Radius.circular(32),
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      widget.product.placeholderIcon,
-                      style: const TextStyle(fontSize: 100),
+                    child: Icon(
+                      ProductIconHelper.iconForCategory(widget.product.category),
+                      size: 80,
+                      color: ProductIconHelper.iconColorForCategory(
+                        widget.product.category,
+                      ),
                     ),
                   ),
                   Padding(

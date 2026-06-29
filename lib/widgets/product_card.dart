@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/price_formatter.dart';
+import '../../core/utils/product_icon_helper.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
@@ -40,10 +41,8 @@ class _ProductCardState extends State<ProductCard> {
     if (product.availableSizes != null ||
         product.availableMilkOptions != null ||
         product.availableExtras != null) {
-      // Go to detail screen
       AppNavigator.push(context, ProductDetailScreen(product: product));
     } else {
-      // Add to cart directly
       context.read<CartProvider>().addItem(
         product: product,
         calculatedUnitPrice: product.price,
@@ -69,6 +68,8 @@ class _ProductCardState extends State<ProductCard> {
       (provider) => provider.isFavorite(product),
     );
 
+    final iconBg = ProductIconHelper.backgroundForCategory(product.category);
+
     return GestureDetector(
       onTap: () {
         AppNavigator.push(context, ProductDetailScreen(product: product));
@@ -77,39 +78,37 @@ class _ProductCardState extends State<ProductCard> {
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.champagne, width: 0.5),
+          // Nötr ince border — gold yok
+          border: Border.all(color: AppColors.border, width: 0.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Görsel alan: toplam kartın ~40%'ı (flex 2 / 5)
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Stack(
                 children: [
                   Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.cardBackground,
-                          AppColors.champagneLight,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(15),
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      product.placeholderIcon,
-                      style: const TextStyle(fontSize: 48),
+                    child: Icon(
+                      ProductIconHelper.iconForCategory(product.category),
+                      size: 40,
+                      color: ProductIconHelper.iconColorForCategory(
+                        product.category,
+                      ),
                     ),
                   ),
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 6,
+                    right: 6,
                     child: FavoriteButton(
                       isFavorite: isFavorite,
                       backgroundColor: AppColors.cardBackground.withAlpha(220),
@@ -123,11 +122,12 @@ class _ProductCardState extends State<ProductCard> {
                 ],
               ),
             ),
+            // İçerik alanı: ~60%
             Expanded(
-              flex: 5,
+              flex: 3,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12.0,
+                  horizontal: 10.0,
                   vertical: 8.0,
                 ),
                 child: Column(
@@ -136,7 +136,7 @@ class _ProductCardState extends State<ProductCard> {
                     Text(
                       product.name,
                       style: AppTextStyles.productName,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
@@ -149,7 +149,7 @@ class _ProductCardState extends State<ProductCard> {
                     const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Flexible(
                           child: Text(
@@ -189,7 +189,7 @@ class _ProductCardState extends State<ProductCard> {
                                     : Icons.add_rounded,
                                 key: ValueKey(_justAdded),
                                 color: Colors.white,
-                                size: 20,
+                                size: 18,
                               ),
                             ),
                           ),

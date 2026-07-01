@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_text_styles.dart';
+import 'app_logo.dart';
 
 class AppHeader extends StatelessWidget {
   final String title;
@@ -39,21 +40,17 @@ class AppHeader extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 36,
+                width: 92,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: AppColors.champagneLight,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.champagne),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  'F',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  child: AppLogo(width: 74),
                 ),
               ),
             ],

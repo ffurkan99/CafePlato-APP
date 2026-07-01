@@ -4,10 +4,14 @@ import 'package:provider/provider.dart';
 import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
+import '../../core/utils/phone_number_formatter.dart';
+import '../../models/country_dial_code.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_feedback.dart';
 import '../../widgets/auth_screen_shell.dart';
 import '../../widgets/auth_text_field.dart';
+import '../../widgets/phone_number_field.dart';
 import '../../widgets/pressable_scale.dart';
 import '../../widgets/primary_button.dart';
 import 'register_screen.dart';
@@ -25,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _phoneFocus = FocusNode();
   final _passwordFocus = FocusNode();
+  CountryDialCode _phoneCountry = CountryDialCodes.turkey;
   bool _obscurePassword = true;
   bool _submitting = false;
 
@@ -40,8 +45,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
+    final normalizedPhone = PhoneNumberFormatter.normalize(
+      _phoneController.text,
+      country: _phoneCountry,
+    );
     final result = await context.read<AuthProvider>().login(
-      phone: _phoneController.text,
+      phone: normalizedPhone,
       password: _passwordController.text,
     );
     if (!mounted) return;
@@ -53,6 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return AuthScreenShell(
       centerContent: true,
       title: 'Kahve ritüeline dön.',
@@ -62,17 +73,15 @@ class _LoginScreenState extends State<LoginScreen> {
         key: _formKey,
         child: Column(
           children: [
-            AuthTextField(
+            PhoneNumberField(
               controller: _phoneController,
               focusNode: _phoneFocus,
               nextFocusNode: _passwordFocus,
+              selectedCountry: _phoneCountry,
+              onCountryChanged: (country) =>
+                  setState(() => _phoneCountry = country),
               label: 'Telefon numarası',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
               autofillHints: const [AutofillHints.telephoneNumber],
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Telefon numaranızı girin.'
-                  : null,
             ),
             const SizedBox(height: 14),
             AuthTextField(

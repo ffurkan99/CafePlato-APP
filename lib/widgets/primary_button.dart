@@ -40,7 +40,7 @@ class PrimaryButton extends StatelessWidget {
             ),
             boxShadow: isLoading
                 ? null
-                : const [
+                : [
                     BoxShadow(
                       color: AppColors.primaryGlow,
                       blurRadius: 12,

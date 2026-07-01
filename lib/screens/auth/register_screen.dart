@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/navigation/app_page_route.dart';
+import '../../core/theme/theme_reactivity.dart';
+import '../../core/utils/phone_number_formatter.dart';
+import '../../models/country_dial_code.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/auth_screen_shell.dart';
 import '../../widgets/auth_text_field.dart';
+import '../../widgets/phone_number_field.dart';
 import '../../widgets/primary_button.dart';
 import 'otp_screen.dart';
 
@@ -25,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
   final _passwordAgain = TextEditingController();
   final _focusNodes = List.generate(6, (_) => FocusNode());
+  CountryDialCode _phoneCountry = CountryDialCodes.turkey;
   bool _obscurePassword = true;
   bool _obscureAgain = true;
   bool _submitting = false;
@@ -50,10 +55,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
+    final normalizedPhone = PhoneNumberFormatter.normalize(
+      _phone.text,
+      country: _phoneCountry,
+    );
     final user = UserModel(
       firstName: _firstName.text.trim(),
       lastName: _lastName.text.trim(),
-      phone: _phone.text.trim(),
+      phone: normalizedPhone,
       email: _email.text.trim(),
       password: _password.text,
     );
@@ -95,6 +104,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return AuthScreenShell(
       showBackButton: true,
       title: 'Aramıza katıl.',
@@ -107,14 +118,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 _nameFields(constraints.maxWidth),
                 const SizedBox(height: 14),
-                AuthTextField(
+                PhoneNumberField(
                   controller: _phone,
                   focusNode: _focusNodes[2],
                   nextFocusNode: _focusNodes[3],
+                  selectedCountry: _phoneCountry,
+                  onCountryChanged: (country) =>
+                      setState(() => _phoneCountry = country),
                   label: 'Telefon',
-                  icon: Icons.phone_outlined,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => _required(value, 'Telefon'),
                 ),
                 const SizedBox(height: 14),
                 AuthTextField(

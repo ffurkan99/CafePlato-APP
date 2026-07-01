@@ -8,10 +8,12 @@ import 'package:cafe_plato/core/theme/app_theme.dart';
 import 'package:cafe_plato/data/mock_data.dart';
 import 'package:cafe_plato/data/store_products.dart';
 import 'package:cafe_plato/models/user_model.dart';
+import 'package:cafe_plato/models/order.dart';
 import 'package:cafe_plato/providers/app_state_provider.dart';
 import 'package:cafe_plato/providers/auth_provider.dart';
 import 'package:cafe_plato/providers/cart_provider.dart';
 import 'package:cafe_plato/providers/favorites_provider.dart';
+import 'package:cafe_plato/providers/order_history_provider.dart';
 import 'package:cafe_plato/providers/store_cart_provider.dart';
 import 'package:cafe_plato/screens/product_detail/product_detail_screen.dart';
 import 'package:cafe_plato/screens/auth/login_screen.dart';
@@ -75,6 +77,71 @@ void main() {
     expect(cart.items, isEmpty);
   });
 
+  test(
+    'cafe order history persists, deduplicates and updates status',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      var now = DateTime(2026, 6, 30, 12);
+      final cart = CartProvider();
+      final product = MockData.products.first;
+      cart.addItem(
+        product: product,
+        quantity: 1,
+        calculatedUnitPrice: product.price,
+      );
+
+      final history = OrderHistoryProvider(now: () => now);
+      await history.restore();
+      final firstOrder = await history.addCafeOrder(
+        items: cart.items,
+        selectedBranch: MockData.branches.first,
+        subtotal: cart.subtotal,
+        total: cart.total,
+      );
+      final duplicateOrder = await history.addCafeOrder(
+        items: cart.items,
+        selectedBranch: MockData.branches.first,
+        subtotal: cart.subtotal,
+        total: cart.total,
+      );
+
+      expect(duplicateOrder.orderNumber, firstOrder.orderNumber);
+      expect(history.orders, hasLength(1));
+      expect(history.activeOrderId, firstOrder.orderNumber);
+      expect(history.activeOrderStatus, OrderStatus.received);
+
+      now = now.add(const Duration(seconds: 4));
+      await history.refreshActiveOrderStatus();
+      expect(history.activeOrderStatus, OrderStatus.preparing);
+      expect(history.orders.first.status, OrderStatus.preparing);
+
+      now = now.add(const Duration(seconds: 6));
+      await history.refreshActiveOrderStatus();
+      expect(history.activeOrderStatus, OrderStatus.ready);
+
+      now = now.add(const Duration(minutes: 1));
+      final restored = OrderHistoryProvider(now: () => now);
+      await restored.restore();
+
+      expect(restored.orders, hasLength(1));
+      expect(restored.orders.first.productSummary, product.name);
+      expect(restored.activeOrderStatus, OrderStatus.ready);
+
+      await restored.completeActiveOrder();
+      expect(restored.hasActiveOrder, isFalse);
+      expect(restored.orders.first.status, OrderStatus.completed);
+
+      final completedRestore = OrderHistoryProvider(now: () => now);
+      await completedRestore.restore();
+      expect(completedRestore.hasActiveOrder, isFalse);
+      expect(completedRestore.orders.first.status, OrderStatus.completed);
+
+      history.dispose();
+      restored.dispose();
+      completedRestore.dispose();
+    },
+  );
+
   testWidgets('tab changes preserve menu state', (tester) async {
     await tester.pumpWidget(
       MultiProvider(
@@ -84,6 +151,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => CartProvider()),
           ChangeNotifierProvider(create: (_) => FavoritesProvider()),
           ChangeNotifierProvider(create: (_) => StoreCartProvider()),
+          ChangeNotifierProvider(create: (_) => OrderHistoryProvider()),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -197,6 +265,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => CartProvider()),
           ChangeNotifierProvider(create: (_) => FavoritesProvider()),
           ChangeNotifierProvider(create: (_) => StoreCartProvider()),
+          ChangeNotifierProvider(create: (_) => OrderHistoryProvider()),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -219,6 +288,139 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('home order section fits supported mobile widths', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final auth = AuthProvider();
+    await auth.register(
+      const UserModel(
+        firstName: 'UzunisimliKullanıcı',
+        lastName: 'Test',
+        phone: '5550001122',
+        email: '',
+        password: 'demo',
+      ),
+    );
+
+    for (final width in const [320.0, 360.0, 390.0, 430.0]) {
+      await tester.binding.setSurfaceSize(Size(width, 760));
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: auth),
+            ChangeNotifierProvider(create: (_) => AppStateProvider()),
+            ChangeNotifierProvider(create: (_) => CartProvider()),
+            ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+            ChangeNotifierProvider(create: (_) => StoreCartProvider()),
+            ChangeNotifierProvider(create: (_) => OrderHistoryProvider()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: const MainNavigation(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hoş geldin, UzunisimliKullanıcı'), findsOneWidget);
+      expect(find.text('Son Siparişlerin'), findsOneWidget);
+      expect(find.text('Henüz siparişin bulunmuyor.'), findsOneWidget);
+      expect(find.text('Keşfet'), findsNothing);
+      expect(tester.takeException(), isNull);
+    }
+
+    await tester.ensureVisible(find.text('Menüyü İncele'));
+    await tester.pumpAndSettle();
+    final menuAction = find.ancestor(
+      of: find.text('Menüyü İncele'),
+      matching: find.byType(PressableScale),
+    );
+    tester.widget<PressableScale>(menuAction).onTap?.call();
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.restaurant_menu_rounded), findsOneWidget);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+  });
+
+  testWidgets('active order progresses responsively and completes', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 6, 30, 12);
+    final history = OrderHistoryProvider(now: () => now);
+    final cart = CartProvider();
+    final product = MockData.products.first;
+    cart.addItem(
+      product: product,
+      quantity: 1,
+      calculatedUnitPrice: product.price,
+    );
+    await history.restore();
+    await history.addCafeOrder(
+      items: cart.items,
+      selectedBranch: MockData.branches.first,
+      subtotal: cart.subtotal,
+      total: cart.total,
+    );
+    now = now.add(const Duration(seconds: 10));
+    await history.refreshActiveOrderStatus();
+    cart.clearCart();
+
+    for (final width in const [320.0, 360.0, 390.0, 430.0]) {
+      await tester.binding.setSurfaceSize(Size(width, 800));
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => AppStateProvider()),
+            ChangeNotifierProvider.value(value: cart),
+            ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+            ChangeNotifierProvider(create: (_) => StoreCartProvider()),
+            ChangeNotifierProvider.value(value: history),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: const MainNavigation(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Siparişiniz hazır'), findsOneWidget);
+      expect(find.text('Alındı'), findsWidgets);
+      expect(find.text('Hazırlanıyor'), findsWidgets);
+      expect(find.text('Hazır'), findsWidgets);
+      expect(find.text('Teslim Aldım'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+
+    final completeAction = find.ancestor(
+      of: find.text('Teslim Aldım'),
+      matching: find.byType(PressableScale),
+    );
+    tester.widget<PressableScale>(completeAction).onTap?.call();
+    await tester.pumpAndSettle();
+
+    expect(history.hasActiveOrder, isFalse);
+    expect(history.orders.first.status, OrderStatus.completed);
+    expect(find.text('Siparişiniz hazır'), findsNothing);
+
+    history.dispose();
+    addTearDown(() => tester.binding.setSurfaceSize(null));
   });
 
   testWidgets('profile uses the opaque CafePlato background', (tester) async {

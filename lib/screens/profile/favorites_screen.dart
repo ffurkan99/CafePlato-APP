@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/pressable_scale.dart';
 import '../../widgets/product_card.dart';
@@ -13,6 +14,8 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/theme_reactivity.dart';
 import '../../../core/utils/price_formatter.dart';
 import '../../../core/utils/product_icon_helper.dart';
 import '../../../models/product.dart';
@@ -77,6 +78,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final isFavorite = context.select<FavoritesProvider, bool>(
       (provider) => provider.isFavorite(widget.product),
     );

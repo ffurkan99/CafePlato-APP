@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../data/mock_data.dart';
 import '../../models/product.dart';
 import '../../widgets/category_chip.dart';
@@ -53,6 +54,8 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final products = _filteredProducts;
 
     return SafeArea(
@@ -99,7 +102,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             top: 4,
                             child: Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.primary,
                                 shape: BoxShape.circle,
                               ),

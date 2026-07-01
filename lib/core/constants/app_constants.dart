@@ -3,4 +3,5 @@ class AppConstants {
 
   static const String appName = 'CafePlato';
   static const String currency = 'TL';
+  static const bool showHomeDiscoverySection = false;
 }

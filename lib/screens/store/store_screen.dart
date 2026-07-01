@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../data/store_products.dart';
 import '../../models/store_product.dart';
@@ -40,6 +41,8 @@ class _StoreScreenState extends State<StoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final popular = StoreProducts.items
         .where((product) => product.isPopular)
         .toList();
@@ -130,7 +133,7 @@ class _StoreScreenState extends State<StoreScreen> {
                               minHeight: 19,
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 5),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
@@ -167,7 +170,7 @@ class _StoreScreenState extends State<StoreScreen> {
       ),
       child: Stack(
         children: [
-          const Positioned.fill(
+          Positioned.fill(
             child: CafePlatoArc(
               color: AppColors.primary,
               opacity: 0.05,
@@ -204,7 +207,7 @@ class _StoreScreenState extends State<StoreScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.coffee_rounded,
                   color: AppColors.primary,
                   size: 31,

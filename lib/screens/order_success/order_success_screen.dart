@@ -3,19 +3,16 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../core/utils/price_formatter.dart';
+import '../../models/order.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/primary_button.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
-  final String branchName;
-  final double total;
+  const OrderSuccessScreen({super.key, required this.order});
 
-  const OrderSuccessScreen({
-    super.key,
-    required this.branchName,
-    required this.total,
-  });
+  final Order order;
 
   @override
   State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
@@ -37,6 +34,8 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     // WillPopScope is deprecated, PopScope is the replacement
     return PopScope(
       canPop: false,
@@ -97,8 +96,8 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Text(
-                    'Sipariş No: CP-1048',
+                  child: Text(
+                    'Sipariş No: ${widget.order.orderNumber}',
                     style: AppTextStyles.heading3,
                   ),
                 ),
@@ -112,12 +111,15 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildInfoRow('Şube', widget.branchName),
+                      _buildInfoRow('Şube', widget.order.selectedBranch.name),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Divider(),
                       ),
-                      _buildInfoRow('Hazırlanma', '10-15 dakika'),
+                      _buildInfoRow(
+                        'Hazırlanma',
+                        widget.order.estimatedPreparationTime,
+                      ),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Divider(),
@@ -130,7 +132,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                             style: AppTextStyles.bodyLarge,
                           ),
                           Text(
-                            PriceFormatter.format(widget.total),
+                            PriceFormatter.format(widget.order.total),
                             style: AppTextStyles.heading3,
                           ),
                         ],

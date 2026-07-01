@@ -169,7 +169,7 @@ class _ProductCardState extends State<ProductCard> {
                             width: 28,
                             height: 28,
                             alignment: Alignment.center,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),

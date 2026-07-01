@@ -31,7 +31,7 @@ class AuthScreenShell extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            const Positioned(
+            Positioned(
               top: -40,
               right: -90,
               width: 280,

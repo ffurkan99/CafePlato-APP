@@ -6,10 +6,12 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../providers/app_state_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_feedback.dart';
 import '../../widgets/cafe_plato_arc.dart';
+import '../../widgets/loyalty_activity_sections.dart';
 import '../../widgets/pressable_scale.dart';
 
 class QrScreen extends StatelessWidget {
@@ -17,6 +19,8 @@ class QrScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final user = context.watch<AuthProvider>().currentUser;
     final branch = context.watch<AppStateProvider>().selectedBranch;
     final payload = 'CAFEPLATO-DEMO-${user?.phone ?? 'GUEST'}';
@@ -47,7 +51,7 @@ class QrScreen extends StatelessWidget {
                   ),
                   child: Stack(
                     children: [
-                      const Positioned.fill(
+                      Positioned.fill(
                         child: CafePlatoArc(
                           color: AppColors.primary,
                           opacity: 0.05,
@@ -155,6 +159,9 @@ class QrScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                const LoyaltyActivitySections(),
+                const SizedBox(height: 4),
               ],
             ),
           );

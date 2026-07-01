@@ -11,9 +11,33 @@ class MockData {
   MockData._();
 
   static final List<Branch> branches = [
-    Branch(id: '1', name: 'CafePlato Cadde'),
-    Branch(id: '2', name: 'CafePlato Sahil'),
-    Branch(id: '3', name: 'CafePlato Merkez'),
+    const Branch(
+      id: '1',
+      name: 'CafePlato Cadde',
+      latitude: 40.9633,
+      longitude: 29.0631,
+      address: 'Bağdat Caddesi No: 312, Kadıköy / İstanbul',
+      openingHours: 'Her gün 08.00 – 23.00',
+      phone: '+90 216 555 01 01',
+    ),
+    const Branch(
+      id: '2',
+      name: 'CafePlato Sahil',
+      latitude: 40.9813,
+      longitude: 29.0274,
+      address: 'Moda Caddesi No: 88, Kadıköy / İstanbul',
+      openingHours: 'Her gün 08.30 – 00.00',
+      phone: '+90 216 555 01 02',
+    ),
+    const Branch(
+      id: '3',
+      name: 'CafePlato Merkez',
+      latitude: 41.0325,
+      longitude: 29.0311,
+      address: 'Hakimiyet-i Milliye Caddesi No: 24, Üsküdar / İstanbul',
+      openingHours: 'Pzt–Cum 07.30 – 22.30 · Hafta sonu 08.30 – 23.00',
+      phone: '+90 216 555 01 03',
+    ),
   ];
 
   static final List<Campaign> campaigns = [

@@ -4,10 +4,12 @@ import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../core/utils/product_icon_helper.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/app_state_provider.dart';
+import '../../providers/order_history_provider.dart';
 import '../../widgets/quantity_selector.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/empty_state.dart';
@@ -38,10 +40,11 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _completeOrder(BuildContext context, CartProvider cart) async {
-    final selectedBranchName = context
-        .read<AppStateProvider>()
-        .selectedBranch
-        .name;
+    if (_isLoading) return;
+
+    final selectedBranch = context.read<AppStateProvider>().selectedBranch;
+    final items = List.of(cart.items);
+    final subtotal = cart.subtotal;
     final total = cart.total;
 
     setState(() {
@@ -53,15 +56,23 @@ class _CartScreenState extends State<CartScreen> {
 
     if (!context.mounted) return;
 
-    // Navigate to success
-    AppNavigator.pushReplacement(
-      context,
-      OrderSuccessScreen(branchName: selectedBranchName, total: total),
+    final order = await context.read<OrderHistoryProvider>().addCafeOrder(
+      items: items,
+      selectedBranch: selectedBranch,
+      subtotal: subtotal,
+      total: total,
     );
+
+    if (!context.mounted) return;
+
+    // Navigate to success
+    AppNavigator.pushReplacement(context, OrderSuccessScreen(order: order));
   }
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sepetim'),
@@ -105,7 +116,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.storefront_rounded,
                             color: AppColors.primary,
                           ),
@@ -114,7 +125,7 @@ class _CartScreenState extends State<CartScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Mağazadan Teslim Al',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -125,7 +136,7 @@ class _CartScreenState extends State<CartScreen> {
                                   selectedBranch.name,
                                   style: AppTextStyles.bodySmall,
                                 ),
-                                const Text(
+                                Text(
                                   'Hazırlanma süresi: 10-15 dakika',
                                   style: TextStyle(
                                     fontSize: 12,

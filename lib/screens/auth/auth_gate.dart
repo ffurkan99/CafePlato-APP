@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../main_navigation.dart';
 import 'login_screen.dart';
 
@@ -12,8 +13,9 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final themeColor = context.watch<ThemeProvider>().primaryColor;
     if (auth.isLoading) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: SizedBox(
             width: 26,
@@ -26,6 +28,9 @@ class AuthGate extends StatelessWidget {
         ),
       );
     }
-    return auth.isLoggedIn ? const MainNavigation() : const LoginScreen();
+    return KeyedSubtree(
+      key: ValueKey(themeColor.toARGB32()),
+      child: auth.isLoggedIn ? const MainNavigation() : const LoginScreen(),
+    );
   }
 }

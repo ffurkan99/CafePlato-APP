@@ -1,29 +1,35 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/navigation/app_modal.dart';
 import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/utils/product_icon_helper.dart';
+import '../../core/theme/theme_reactivity.dart';
+import '../../core/utils/order_date_formatter.dart';
+import '../../core/utils/price_formatter.dart';
 import '../../data/mock_data.dart';
 import '../../models/campaign.dart';
+import '../../models/order.dart';
 import '../../models/product.dart';
 import '../../providers/app_state_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/cart_provider.dart';
+import '../../providers/order_history_provider.dart';
+import '../../widgets/active_order_card.dart';
 import '../../widgets/app_feedback.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/home_discovery_card.dart';
+import '../../widgets/order_status_badge.dart';
 import '../../widgets/pressable_scale.dart';
+import '../profile/order_history_screen.dart';
 import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.onOpenMenu});
+
+  final VoidCallback onOpenMenu;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,10 +39,6 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   String _selectedCategory = MockData.categories.first;
   late final AnimationController _introController;
-
-  // Tekrar sipariş feedback
-  Timer? _reorderFeedbackTimer;
-  bool _reorderJustAdded = false;
 
   @override
   void initState() {
@@ -59,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _introController.dispose();
-    _reorderFeedbackTimer?.cancel();
     super.dispose();
   }
 
@@ -102,26 +103,14 @@ class _HomeScreenState extends State<HomeScreen>
     AppFeedback.show(context, 'Henüz yeni bildiriminiz bulunmuyor.');
   }
 
-  void _onReorder() {
-    final product = MockData.lastOrder;
-    context.read<CartProvider>().addItem(
-      product: product,
-      size: product.availableSizes?[1],
-      milk: product.availableMilkOptions?[1],
-      extras: [],
-      quantity: 1,
-      calculatedUnitPrice:
-          product.price +
-          (product.availableSizes?[1].priceDelta ?? 0) +
-          (product.availableMilkOptions?[1].priceDelta ?? 0),
+  Future<void> _completeActiveOrder() async {
+    await context.read<OrderHistoryProvider>().completeActiveOrder();
+    if (!mounted) return;
+    AppFeedback.show(
+      context,
+      'Sipariş tamamlandı. Afiyet olsun!',
+      type: AppFeedbackType.success,
     );
-    HapticFeedback.lightImpact();
-    _reorderFeedbackTimer?.cancel();
-    setState(() => _reorderJustAdded = true);
-    _reorderFeedbackTimer = Timer(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _reorderJustAdded = false);
-    });
-    AppFeedback.show(context, 'Tekrar eklendi.', type: AppFeedbackType.success);
   }
 
   void _showBranchSheet() {
@@ -154,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on_rounded,
                         color: AppColors.primary,
                         size: 20,
@@ -180,6 +169,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final selectedBranch = context.watch<AppStateProvider>().selectedBranch;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -210,21 +201,26 @@ class _HomeScreenState extends State<HomeScreen>
 
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-          // ─── 4. Hızlı Tekrar Sipariş Dock ───────────────────────────
-          SliverToBoxAdapter(child: _introItem(3, _buildReorderDock())),
+          // ─── 4. Aktif Sipariş ───────────────────────────────────────
+          SliverToBoxAdapter(child: _introItem(3, _buildActiveOrder())),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          // ─── 5. Son Siparişler ──────────────────────────────────────
+          SliverToBoxAdapter(child: _introItem(4, _buildRecentOrders())),
 
-          // ─── 5. Minimal Kategori Kontrolü ───────────────────────────
-          SliverToBoxAdapter(child: _introItem(4, _buildCategoryLabel())),
-          SliverToBoxAdapter(child: _introItem(4, _buildCategoryRow())),
+          if (AppConstants.showHomeDiscoverySection) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            // ─── 6. Minimal Kategori Kontrolü ─────────────────────────
+            SliverToBoxAdapter(child: _introItem(5, _buildCategoryLabel())),
+            SliverToBoxAdapter(child: _introItem(5, _buildCategoryRow())),
 
-          // ─── 6. Yatay Discovery Ürün Rail'i ─────────────────────────
-          SliverToBoxAdapter(
-            child: _introItem(5, _buildDiscoveryRail(screenWidth)),
-          ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // ─── 7. Yatay Discovery Ürün Rail'i ───────────────────────
+            SliverToBoxAdapter(
+              child: _introItem(6, _buildDiscoveryRail(screenWidth)),
+            ),
+          ],
 
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -237,10 +233,13 @@ class _HomeScreenState extends State<HomeScreen>
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildEditorialHeader() {
     final user = context.watch<AuthProvider>().currentUser;
-    final firstName = user?.firstName.isNotEmpty == true
-        ? user!.firstName
-        : 'Misafir';
-    final initial = firstName.characters.first.toUpperCase();
+    final firstName = user?.firstName.trim() ?? '';
+    final welcomeText = firstName.isEmpty
+        ? 'Hoş geldin'
+        : 'Hoş geldin, $firstName';
+    final initial = firstName.isEmpty
+        ? 'C'
+        : firstName.characters.first.toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -264,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Günaydın, $firstName',
+                  welcomeText,
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 26,
@@ -273,6 +272,8 @@ class _HomeScreenState extends State<HomeScreen>
                     height: 1.1,
                     letterSpacing: -0.5,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -611,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildCampaignCard(Campaign campaign, double width) {
     // Yüzey varyasyonları
-    const surfaces = [
+    final surfaces = [
       _CampaignSurface(
         bg: AppColors.primaryLight,
         accentColor: AppColors.primary,
@@ -763,132 +764,236 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 4. HIZLI TEKRAR SİPARİŞ DOCK
+  // 4. AKTİF SİPARİŞ
   // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildReorderDock() {
-    final product = MockData.lastOrder;
-    final price =
-        product.price +
-        (product.availableSizes?[1].priceDelta ?? 0) +
-        (product.availableMilkOptions?[1].priceDelta ?? 0);
+  Widget _buildActiveOrder() {
+    final order = context.watch<OrderHistoryProvider>().activeOrder;
+
+    return AnimatedSwitcher(
+      duration: AppMotion.duration(context, AppMotion.slow),
+      switchInCurve: AppMotion.entrance,
+      switchOutCurve: AppMotion.exit,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: order == null
+          ? const SizedBox.shrink(key: ValueKey('no-active-order'))
+          : Padding(
+              key: ValueKey(order.orderNumber),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: ActiveOrderCard(
+                order: order,
+                onComplete: _completeActiveOrder,
+              ),
+            ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 5. SON SİPARİŞLER
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildRecentOrders() {
+    final history = context.watch<OrderHistoryProvider>();
+    final recentOrders = history.orders.take(3).toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              'Son Siparişin',
-              style: TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                letterSpacing: 0.1,
-              ),
+          Text(
+            'Son Siparişlerin',
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.3,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border, width: 0.8),
-            ),
-            child: Row(
-              children: [
-                // Ürün ikon alanı
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: ProductIconHelper.backgroundForCategory(
-                      product.category,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    ProductIconHelper.iconForCategory(product.category),
-                    size: 20,
-                    color: ProductIconHelper.iconColorForCategory(
-                      product.category,
-                    ),
+          const SizedBox(height: 10),
+          if (history.isLoading)
+            SizedBox(
+              height: 76,
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Ürün bilgisi
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+              ),
+            )
+          else if (recentOrders.isEmpty)
+            _buildOrdersEmptyState()
+          else ...[
+            ...recentOrders.map(
+              (order) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _buildRecentOrderRow(order),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: PressableScale(
+                semanticLabel: 'Tüm siparişleri gör',
+                onTap: () =>
+                    AppNavigator.push(context, const OrderHistoryScreen()),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        product.name,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                        'Tümünü Gör',
+                        style: AppTextStyles.controlLabel.copyWith(
+                          color: AppColors.primary,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Orta Boy • Laktozsuz  •  ${price.toStringAsFixed(0)} ₺',
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 3),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 13,
+                        color: AppColors.primary,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Ekle butonu
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentOrderRow(Order order) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  order.productSummary,
+                  style: AppTextStyles.productName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(child: OrderStatusBadge(status: order.status)),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  OrderDateFormatter.short(order.orderDate),
+                  style: AppTextStyles.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(' · ', style: AppTextStyles.bodySmall),
+              Expanded(
+                child: Text(
+                  order.selectedBranch.name,
+                  style: AppTextStyles.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                PriceFormatter.format(order.total),
+                style: AppTextStyles.price.copyWith(fontSize: 13),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border, width: 0.8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.receipt_long_outlined,
+              size: 20,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Henüz siparişin bulunmuyor.',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Menüden ilk kahveni seçerek başlayabilirsin.',
+                  style: AppTextStyles.bodySmall,
+                ),
+                const SizedBox(height: 8),
                 PressableScale(
-                  semanticLabel: 'Tekrar sepete ekle',
-                  onTap: _onReorder,
-                  borderRadius: BorderRadius.circular(999),
-                  child: AnimatedContainer(
-                    duration: AppMotion.fast,
-                    curve: AppMotion.standard,
+                  semanticLabel: 'Menüyü incele',
+                  onTap: widget.onOpenMenu,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
+                      horizontal: 10,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: _reorderJustAdded
-                          ? AppColors.success
-                          : AppColors.primary,
-                      borderRadius: BorderRadius.circular(100),
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: AnimatedSwitcher(
-                      duration: AppMotion.fast,
-                      child: _reorderJustAdded
-                          ? const Icon(
-                              Icons.check_rounded,
-                              key: ValueKey('check'),
-                              color: Colors.white,
-                              size: 16,
-                            )
-                          : Text(
-                              'Ekle',
-                              key: const ValueKey('add'),
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.fontFamily,
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                    child: Text(
+                      'Menüyü İncele',
+                      style: AppTextStyles.controlLabel.copyWith(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),

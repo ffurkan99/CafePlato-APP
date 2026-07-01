@@ -8,7 +8,9 @@ import 'providers/app_state_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/favorites_provider.dart';
+import 'providers/order_history_provider.dart';
 import 'providers/store_cart_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth/auth_gate.dart';
 
 void main() {
@@ -25,6 +27,10 @@ void main() {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => StoreCartProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..restore()),
+        ChangeNotifierProvider(
+          create: (_) => OrderHistoryProvider()..restore(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -36,6 +42,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
+
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,

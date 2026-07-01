@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../core/utils/price_formatter.dart';
 import '../../models/store_cart_item.dart';
 import '../../providers/store_cart_provider.dart';
@@ -15,6 +16,8 @@ class StoreCartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final cart = context.watch<StoreCartProvider>();
     return Scaffold(
       appBar: AppBar(
@@ -24,8 +27,11 @@ class StoreCartScreen extends StatelessWidget {
             PressableScale(
               semanticLabel: 'Sepeti temizle',
               onTap: cart.clear,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Text(
                   'Temizle',
                   style: TextStyle(
@@ -46,7 +52,7 @@ class StoreCartScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.shopping_bag_outlined,
                         size: 48,
                         color: AppColors.primary,

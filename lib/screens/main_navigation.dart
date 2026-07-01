@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'menu/menu_screen.dart';
-import 'wallet/wallet_screen.dart';
 import 'qr/qr_screen.dart';
+import 'branches/branches_screen.dart';
 import 'store/store_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
@@ -10,6 +10,7 @@ import '../widgets/cart_summary_bar.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_motion.dart';
 import '../core/theme/app_text_styles.dart';
+import '../core/theme/theme_reactivity.dart';
 import '../core/widgets/animated_indexed_stack.dart';
 import '../widgets/pressable_scale.dart';
 
@@ -23,16 +24,29 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const MenuScreen(),
-    const QrScreen(),
-    const WalletScreen(),
-    const StoreScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(onOpenMenu: () => _selectTab(1)),
+      const MenuScreen(),
+      const QrScreen(),
+      const BranchesScreen(),
+      const StoreScreen(),
+    ];
+  }
+
+  void _selectTab(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return Scaffold(
       body: AnimatedIndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: SafeArea(
@@ -82,9 +96,9 @@ class _MainNavigationState extends State<MainNavigation> {
                   Expanded(
                     child: _buildNavItem(
                       3,
-                      Icons.account_balance_wallet_outlined,
-                      Icons.account_balance_wallet_rounded,
-                      'Cüzdan',
+                      Icons.location_on_outlined,
+                      Icons.location_on_rounded,
+                      'Mağazalar',
                     ),
                   ),
                   Expanded(
@@ -92,7 +106,7 @@ class _MainNavigationState extends State<MainNavigation> {
                       4,
                       Icons.storefront_outlined,
                       Icons.storefront_rounded,
-                      'Mağaza',
+                      'Online Mağaza',
                     ),
                   ),
                 ],
@@ -120,13 +134,7 @@ class _MainNavigationState extends State<MainNavigation> {
         selected: isSelected,
         pressedScale: 0.98,
         borderRadius: BorderRadius.circular(14),
-        onTap: isSelected
-            ? null
-            : () {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
+        onTap: isSelected ? null : () => _selectTab(index),
         child: KeyedSubtree(
           key: ValueKey('bottom-nav-$index'),
           child: SizedBox(

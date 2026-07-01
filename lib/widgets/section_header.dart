@@ -5,18 +5,20 @@ class SectionHeader extends StatelessWidget {
   final String title;
   final String? actionTitle;
   final VoidCallback? onActionTap;
+  final EdgeInsetsGeometry padding;
 
   const SectionHeader({
     super.key,
     required this.title,
     this.actionTitle,
     this.onActionTap,
+    this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: padding,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

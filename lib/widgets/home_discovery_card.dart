@@ -169,7 +169,7 @@ class _HomeDiscoveryCardState extends State<HomeDiscoveryCard> {
                             width: 30,
                             height: 30,
                             alignment: Alignment.center,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),

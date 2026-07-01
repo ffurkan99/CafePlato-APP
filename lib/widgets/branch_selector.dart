@@ -40,7 +40,7 @@ class BranchSelector extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.location_on_rounded,
                           color: AppColors.primary,
                           size: 20,
@@ -88,7 +88,7 @@ class BranchSelector extends StatelessWidget {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.location_on_rounded,
                   color: AppColors.primary,
                   size: 16,

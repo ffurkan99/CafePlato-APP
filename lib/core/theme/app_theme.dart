@@ -12,7 +12,7 @@ class AppTheme {
       textTheme: AppTextStyles.textTheme,
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primary,
         surface: AppColors.cardBackground,
@@ -25,7 +25,7 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: AppTextStyles.heading2,
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.cardBackground,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,

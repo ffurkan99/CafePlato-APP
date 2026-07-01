@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../providers/app_state_provider.dart';
 
 class NotificationSettingsScreen extends StatelessWidget {
@@ -10,6 +11,8 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bildirim Ayarları'),

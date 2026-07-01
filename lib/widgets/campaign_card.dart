@@ -13,7 +13,7 @@ class CampaignCard extends StatelessWidget {
   const CampaignCard({super.key, required this.campaign, required this.width});
 
   /// Kart yüzey rengi ve aksan rengi — surfaceVariant'a göre
-  static const List<_CardSurface> _surfaces = [
+  static List<_CardSurface> get _surfaces => [
     _CardSurface(
       bg: AppColors.primaryLight, // Açık bordo
       accent: AppColors.primary,

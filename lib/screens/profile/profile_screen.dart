@@ -6,12 +6,14 @@ import '../../core/navigation/app_page_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_reactivity.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_feedback.dart';
 import '../../widgets/pressable_scale.dart';
 import 'notification_settings_screen.dart';
 import 'favorites_screen.dart';
 import 'order_history_screen.dart';
+import 'theme_picker_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -109,6 +111,8 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    dependOnThemeChanges(context);
+
     final user = context.watch<AuthProvider>().currentUser;
     final fullName = user?.fullName.isNotEmpty == true
         ? user!.fullName
@@ -122,7 +126,7 @@ class ProfileScreen extends StatelessWidget {
         .toUpperCase();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -293,7 +297,17 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     isLast: true,
                   ),
-                  // Çıkış Yap — Destek grubunun altında, kontrollü konum
+                  const SizedBox(height: 24),
+
+                  _buildGroupTitle('Prototip'),
+                  _buildMenuItem(
+                    icon: Icons.palette_outlined,
+                    title: 'Tema Değiştir',
+                    onTap: () {
+                      AppNavigator.push(context, const ThemePickerScreen());
+                    },
+                    isLast: true,
+                  ),
                   const SizedBox(height: 32),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -312,7 +326,7 @@ class ProfileScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: AppColors.border),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.logout_rounded,
                                 color: AppColors.primary,
                                 size: 20,

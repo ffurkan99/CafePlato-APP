@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/theme/app_motion.dart';
+import '../core/theme/app_colors.dart';
 
 class PressableScale extends StatefulWidget {
   const PressableScale({
@@ -89,7 +90,7 @@ class _PressableScaleState extends State<PressableScale> {
   }
 
   Widget _buildChildInteractiveSurface(BuildContext context) {
-    final baseColor = widget.overlayColor ?? const Color(0xFFB3262E);
+    final baseColor = widget.overlayColor ?? AppColors.primary;
     final hoverColor = widget.hoverColor ?? baseColor;
     final stateColor = _isPressed
         ? baseColor.withValues(alpha: 0.05)
@@ -162,22 +163,21 @@ class _PressableScaleState extends State<PressableScale> {
                             ? SystemMouseCursors.click
                             : SystemMouseCursors.basic,
                         splashFactory: widget.splashFactory,
-                        splashColor:
-                            (widget.overlayColor ?? const Color(0xFFB3262E))
-                                .withValues(alpha: 0.08),
+                        splashColor: (widget.overlayColor ?? AppColors.primary)
+                            .withValues(alpha: 0.08),
                         highlightColor:
-                            (widget.overlayColor ?? const Color(0xFFB3262E))
+                            (widget.overlayColor ?? AppColors.primary)
                                 .withValues(alpha: 0.05),
                         hoverColor: widget.enableHover
                             ? (widget.hoverColor ??
                                       widget.overlayColor ??
-                                      const Color(0xFFB3262E))
+                                      AppColors.primary)
                                   .withValues(alpha: 0.035)
                             : Colors.transparent,
                         focusColor:
                             (widget.hoverColor ??
                                     widget.overlayColor ??
-                                    const Color(0xFFB3262E))
+                                    AppColors.primary)
                                 .withValues(alpha: 0.045),
                         onHighlightChanged: _setPressed,
                         onTap: _isEnabled && widget.onTap != null

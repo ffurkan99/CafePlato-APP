@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../core/utils/phone_number_formatter.dart';
 import '../models/user_model.dart';
 import '../services/auth_storage_service.dart';
 
@@ -44,9 +45,16 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> register(UserModel user) async {
-    _currentUser = user;
+    final normalizedUser = UserModel(
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: PhoneNumberFormatter.normalize(user.phone),
+      email: user.email,
+      password: user.password,
+    );
+    _currentUser = normalizedUser;
     _isLoggedIn = false;
-    await _storage.saveUser(user);
+    await _storage.saveUser(normalizedUser);
     await _storage.setLoggedIn(false);
     notifyListeners();
   }
@@ -68,7 +76,9 @@ class AuthProvider extends ChangeNotifier {
     if (user == null) {
       return const LoginResult.failure(LoginFailure.noRegisteredUser);
     }
-    if (phone.trim() != user.phone.trim()) {
+    final normalizedPhone = PhoneNumberFormatter.normalize(phone);
+    final normalizedStoredPhone = PhoneNumberFormatter.normalize(user.phone);
+    if (normalizedPhone != normalizedStoredPhone) {
       return const LoginResult.failure(LoginFailure.phoneNotFound);
     }
     if (password.trim().isEmpty) {

@@ -47,7 +47,7 @@ class AppHeader extends StatelessWidget {
                   border: Border.all(color: AppColors.champagne),
                 ),
                 alignment: Alignment.center,
-                child: const Text(
+                child: Text(
                   'F',
                   style: TextStyle(
                     color: AppColors.primary,
